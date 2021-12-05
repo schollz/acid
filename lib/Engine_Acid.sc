@@ -17,8 +17,9 @@ Engine_Acid : CroneEngine {
 
 		// <acid>
 
+		// add synth defs
 		SynthDef("mxfx",{ 
-			arg inDelay, inReverb, reverb=0.05, out, secondsPerBeat=1,delayBeats=4,delayFeedback=0.1,bufnumDelay;
+			arg inDelay, inReverb, reverb=0.05, out, secondsPerBeat=1,delayBeats=4,delayFeedback=0.1,bufnumDelay, t_trig=1;
 			var snd,snd2,y,z;
 
 			// delay
@@ -40,6 +41,9 @@ Engine_Acid : CroneEngine {
 			5.do{snd2 = AllpassN.ar(snd2, 0.1, {Rand(0.01,0.099)}!2, 3)};
 			snd2 = LPF.ar(snd2, 1500);
 			snd2 = LeakDC.ar(snd2);
+
+			snd2=snd2*EnvGen.kr(Env.new([0.02, 0.3, 0.02], [0.4, 0.01], [3, -4], 1), 1-Trig.kr(t_trig, 0.01))
+
 			Out.ar(out,snd2);
 		}).add;
 
@@ -195,10 +199,6 @@ Engine_Acid : CroneEngine {
 			Out.ar(outBus, out.dup);
 		}).add;
 
-
-		context.server.sync;
-
-
 		// initialize fx synth and bus
 		context.server.sync;
 		acidBusDelay = Bus.audio(context.server,2);
@@ -206,47 +206,52 @@ Engine_Acid : CroneEngine {
 		context.server.sync;
 		acidFX = Synth.new("mxfx",[\out,0,\inDelay,acidBusDelay,\inReverb,acidBusReverb]);
 		context.server.sync;
-		acidSynthLead = Synth.before(acidFX,[\amp,0,\out,0,\delayOut,acidBusDelay,\reverbOut,acidBusReverb]);
-		acidSynthBass = Synth.before(acidFX,[\amp,0,\out,0,\delayOut,acidBusDelay,\reverbOut,acidBusReverb]);
+		acidSynthLead = Synth.before(acidFX,"acid",[\amp,0,\out,0,\delayOut,acidBusDelay,\reverbOut,acidBusReverb]);
+		acidSynthBass = Synth.before(acidFX,"acid2",[\amp,0,\out,0,\delayOut,acidBusDelay,\reverbOut,acidBusReverb]);
 		context.server.sync;
 
-
-		acidSynth=Synth.new("sc303");
-
-		this.addCommand("acid","s",{ arg msg;
+		// add norns commands
+		this.addCommand("acid_bass","ffff",{ arg msg;
 			acidSynthBass.set(
 				\t_trig,1,
 				\amp,msg[1],
-				\pitch,msg[2]
+				\pitch,msg[2],
+				\delaySend,msg[3],
+				\reverbSend,msg[4],
 			);
 		});
 
-		this.addCommand("acid_lead","ff",{ arg msg;
-			acidSynthBass.set(
+		this.addCommand("acid_lead","ffff",{ arg msg;
+			acidSynthLead.set(
 				\t_trig,1,
 				\amp,msg[1],
-				\pitch,msg[2]
+				\pitch,msg[2],
+				\delaySend,msg[3],
+				\reverbSend,msg[4],
 			);
 		});
 
-		this.addCommand("acid_drum","sff",{ arg msg;
-			acidSynthBass.set(
-				\t_trig,1,
-				\amp,msg[1],
-				\pitch,msg[2]
-			);
+		this.addCommand("acid_drum","sfff",{ arg msg;
+			Synth.before(acidFX,msg[1].asString,[
+				\amp,msg[2],
+				\delaySend,msg[3],
+				\reverbSend,msg[4],
+			]);
 		});
 
-
+		this.addCommand("acid_reverb","",{ arg msg;
+			acidFX.set(\t_trig,1)
+		});
 		// </acid>
 	}
 
 	free {
 		// <acid>
-		acidBusDelay.free;
-		acidBusReverb.free;
 		acidSynthBass.free;
 		acidSynthLead.free;
+		acidFX.free;
+		acidBusDelay.free;
+		acidBusReverb.free;
 		// </acid>
 	}
 }
