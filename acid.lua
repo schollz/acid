@@ -18,31 +18,71 @@ lattice=require("lattice")
 instrument_=include("acid/lib/instrument")
 engine.name="Acid"
 local shift=false
+local inited=false
 
 function init()
+  params_init()
+
+  -- initialize grid
   -- grid_=grid__:new({})
-  -- initialize metro for updating screen
+
+  -- constant timer
   timer=metro.init()
   timer.time=1/15
   timer.count=-1
-  timer.event=update_screen
+  timer.event=updater
   timer:start()
+end
+
+-- asynchronous init
+function init2()
+  inited=true
+
+  sequencer=lattice:new{
+    ppqn=96
+  }
+  local step_global=0
+  local last_step={}
+  local current_notes={}
+  sequencer:new_pattern({
+    action=function(t)
+      for _,ins in ipairs({"bass"}) do
+
+      end
+    end,
+    division=1/4
+  })
+  sequencer:hard_restart()
+  -- <debug>
+  params_randomize()
+  -- </debug>
+end
+
+function params_randomize()
+  params:set("acid_"..ins.."_n",16)
+  params:set("acid_"..ins.."_k",15)
+  params:set("acid_"..ins.."_w",math.random(0,3)*2+1)
+  for _,ins in ipairs({"bass","lead"}) do
+    for _,thing in ipairs({"note","accent"}) do
+      params:set("acid_"..ins.."_"..thing,math.random(1,15))
+      for i=1,16 do
+        local k="acid_"..ins.."_"..thing.."_"..i
+        params:set(k,i,math.random(0,15))
+      end
+    end
+  end
 end
 
 function params_init()
   i_={}
-  local control1_16=controlspec.new(1,16,'lin',1,16,'',1/16)
-  local control0_15=controlspec.new(0,15,'lin',1,15,'',1/16)
-  local control0_100p=controlspec.new(0,100,'lin',1,50,'%',1/100)
+  local control1_16=controlspec.new(1,16,'lin',1,16,'',1/16,true)
+  local control1_15=controlspec.new(1,15,'lin',1,15,'',1/15,true)
+  local control0_15=controlspec.new(0,15,'lin',1,15,'',1/16,true)
+  local control0_100p=controlspec.new(0,100,'lin',1,50,'%',1/100,true)
   local instruments={"bass","lead"}
   for _,ins in ipairs(instruments) do
-    i_[ins]=instrument_:new()
+    i_[ins]=instrument_:new({id=ins})
     params:add_separator(ins)
-    -- note number
-    params:add_control("acid_"..ins.."_notes","notes",control1_16)
-    params:set_action("acid_"..ins.."_notes",function(v)
-      i_[ins]:set_note_num(v)
-    end)
     -- er "n"
     params:add_control("acid_"..ins.."_n","n",control1_16)
     params:set_action("acid_"..ins.."_n",function(n)
@@ -51,30 +91,35 @@ function params_init()
     -- er "k"
     params:add_control("acid_"..ins.."_k","k",control0_100p)
     params:set_action("acid_"..ins.."_k",function(kp)
-      i_[ins]:set_kp(kp)
+      i_[ins]:set_kp(kp/100)
     end)
-    -- accents
-    params:add_group("accent",16)
-    for i=1,16 do
-      local k="acid_"..ins.."_accent_"..i
-      params:add_control(k,i,control0_15)
-      params:set_action(k,function(v)
-        i_[ins]:set_accent(i,v)
+    -- er "w"
+    params:add_control("acid_"..ins.."_w","w",control0_15)
+    params:set_action("acid_"..ins.."_w",function(n)
+      i_[ins]:set_w(w)
+    end)
+    -- notes/accents
+    for _,thing in ipairs({"note","accent"}) do
+      params:add_group(thing.."s",17)
+      params:add_control("acid_"..ins.."_"..thing,"# "..thing.."s",control0_15)
+      params:set_action("acid_"..ins.."_"..thing,function(v)
+        i_[ins]:set_num(thing,v)
       end)
-    end
-    -- note probabilities
-    params:add_group("note probability",16)
-    for i=1,16 do
-      local k="acid_"..ins.."_note_"..i
-      params:add_control(k,i,control0_15)
-      params:set_action(k,function(v)
-        i_[ins]:set_note_freq(i,v)
-      end)
+      for i=1,16 do
+        local k="acid_"..ins.."_"..thing.."_"..i
+        params:add_control(k,i,control0_15)
+        params:set_action(k,function(v)
+          i_[ins]:seq_freq(thing,i,v)
+        end)
+      end
     end
   end
 end
 
-function update_screen()
+function updater()
+  if not inited then
+    init2()
+  end
   redraw()
 end
 
