@@ -47,15 +47,17 @@ function init2()
   sequencer:new_pattern({
     action=function(t)
       for _,ins in ipairs({"bass"}) do
-
+        i_[ins]:pulse()
       end
     end,
     division=1/4
   })
-  sequencer:hard_restart()
+
   -- <debug>
   params_randomize()
   -- </debug>
+
+  sequencer:hard_restart()
 end
 
 function params_randomize()
