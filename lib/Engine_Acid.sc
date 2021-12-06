@@ -19,7 +19,7 @@ Engine_Acid : CroneEngine {
 
 		// add synth defs
 		SynthDef("mxfx",{ 
-			arg inDelay, inReverb, reverb=0.05, out, secondsPerBeat=1/16,delayBeats=4,delayFeedback=0.1,bufnumDelay, gate=1;
+			arg inDelay, inReverb, reverb=0.05, reverbAttack=0.1,reverbDecay=0.5, out, secondsPerBeat=1/4,delayBeats=4,delayFeedback=0.1,bufnumDelay, t_trig=1;
 			var snd,snd2,y,z;
 
 			// delay
@@ -42,7 +42,7 @@ Engine_Acid : CroneEngine {
 			snd2 = LPF.ar(snd2, 1500);
 			snd2 = LeakDC.ar(snd2);
 
-			snd2=snd2*EnvGen.kr(Env.new([0.02, 0.3, 0.02], [0.4, 0.01], [3, -4], 1), 1-Trig.kr(gate, 0.01));
+			snd2=snd2*(1-EnvGen.ar(Env.perc(reverbAttack,reverbDecay), t_trig));
 
 			Out.ar(out,snd2);
 		}).add;
@@ -255,13 +255,28 @@ Engine_Acid : CroneEngine {
 		this.addCommand("acid_drum","sfff",{ arg msg;
 			Synth.before(acidFX,msg[1].asString,[
 				\amp,msg[2],
+				\delayOut,acidBusDelay,
 				\delaySend,msg[3],
+				\reverbOut,acidBusReverb,
 				\reverbSend,msg[4],
 			]);
 		});
 
-		this.addCommand("acid_reverb","i",{ arg msg;
-			acidFX.set(\gate,msg[1])
+		this.addCommand("acid_reverb","iff",{ arg msg;
+			acidFX.set(
+				\t_trig,msg[1],
+				\reverbAttack,msg[2],
+				\reverbDecay,msg[3],
+			);
+		});
+
+		// engine.acid_delay(clock.get_beats()/16,8,0.5)
+		this.addCommand("acid_delay","fff",{ arg msg;
+			acidFX.set(
+				\secondsPerBeat,msg[1],
+				\delayBeats,msg[2],
+				\delayFeedback,msg[3],
+			);
 		});
 		// </acid>
 	}

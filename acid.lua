@@ -48,12 +48,15 @@ function init2()
   local current_notes={}
   sequencer:new_pattern({
     action=function(t)
-      for _,ins in ipairs({"bass","lead","kick"}) do
+      for _,ins in ipairs({"bass","lead","kick","snare","hat","clap"}) do
         i_[ins]:pulse()
       end
     end,
     division=1/16
   })
+
+  -- setup engine defaults
+  engine.acid_delay(clock.get_beat_sec()/8,2,0.015)
 
   -- <debug>
   params_randomize_all()
@@ -104,6 +107,7 @@ function params_init()
   local control1_15=controlspec.new(1,15,'lin',1,1,'',1/15,true)
   local control0_15=controlspec.new(0,15,'lin',1,0,'',1/16,true)
   local control0_100p=controlspec.new(0,100,'lin',1,50,'%',1/100,true)
+  local control_small_time=controlspec.new(0,1,'lin',0.01,0.1,'s',0.01/1)
   local percussion={"kick","snare","clap","hat"}
   local percussion_defaults={
     kick={n=16,k=4/16*100,w=0},
@@ -137,15 +141,11 @@ function params_init()
     -- delay/reverb send
     for _, fxname in ipairs({"delay","reverb"}) do 
       local k="acid_"..ins.."_"..fxname
-      print(k)
       params:add_control(k,fxname.." send",control0_100p)
-      params:set_action(k,fxname.." send",function(v)
+      params:set_action(k,function(v)
         i_[ins]:set_fx(fxname,v/100)
       end)  
-
-      print("here comes an error!")
-      --params:set(k,1)
-      print("won't get here cause error")
+      params:set(k,0)
     end
     -- amp
     params:add_group("amps",16)
@@ -180,15 +180,15 @@ function params_init()
       --print(ins.." w",w)
       i_[ins]:set_w(w)
     end)
-    -- -- delay/reverb send
-    -- for _, fx in ipairs({"delay","reverb"}) do 
-    --   params:add_control("acid_"..ins.."_"..fx,fx.." send",control0_100p)
-    --   params:set_action("acid_"..ins.."_"..fx,fx.." send",function(v)
-    --     --i_[ins]:set_fx(fx,v/100)
-    --   end)  
-    --   params:set("acid_"..ins.."_"..fx,0)
-    -- end
-    -- amp
+    -- delay/reverb send
+    for _, fxname in ipairs({"delay","reverb"}) do 
+      local k="acid_"..ins.."_"..fxname
+      params:add_control(k,fxname.." send",control0_100p)
+      params:set_action(k,function(v)
+        i_[ins]:set_fx(fxname,v/100)
+      end)  
+      params:set(k,0)
+    end
     params:add_group("amps",16)
     for i=1,16 do 
       local k="acid_"..ins.."_amp_"..i 
@@ -214,6 +214,11 @@ function params_init()
       end
     end
   end
+
+  -- effects
+
+  params:add_control("acid_reverb_attack","reverb attack",control_small_time)
+  params:add_control("acid_reverb_decay","reverb decay",control_small_time)
 end
 
 function updater()

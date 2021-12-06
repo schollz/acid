@@ -58,8 +58,12 @@ function Instrument:pulse()
       engine["acid_"..self.id.."_gate"](0)
     end)
   elseif self.id=="kick" or self.id=="snare" or self.id=="hat" or self.id=="clap" then
-    --print(self.id,self.seq_gate0,self.seq_amp0,note,self.seq_duration0)
+    print(self.id,self.seq_amp0,self.delay_send,self.reverb_send)
     engine.acid_drum(self.id,self.seq_amp0,self.delay_send,self.reverb_send)
+    -- TODO: make reverb its own instrument
+    if self.id=="kick" then 
+      engine.acid_reverb(1,params:get("acid_reverb_attack"),params:get("acid_reverb_decay"))
+    end
   end
 end
 
@@ -67,8 +71,8 @@ end
 -- fx
 --
 function Instrument:set_fx(fx_name,v)
-  print(fx_name,v)
-  --self[fx_name.."_send"]=v
+  print(fx_name.."_send")
+  self[fx_name.."_send"]=v
 end
 
 --
