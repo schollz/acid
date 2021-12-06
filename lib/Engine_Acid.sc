@@ -34,15 +34,17 @@ Engine_Acid : CroneEngine {
 
 			// reverb
 			snd2 = In.ar(inReverb,2);
-			snd2 = DelayN.ar(snd2, 0.03, 0.03);
-			snd2 = CombN.ar(snd2, 0.1, {Rand(0.01,0.099)}!32, 4);
-			snd2 = SplayAz.ar(2, snd2);
-			snd2 = LPF.ar(snd2, 1500);
-			5.do{snd2 = AllpassN.ar(snd2, 0.1, {Rand(0.01,0.099)}!2, 3)};
-			snd2 = LPF.ar(snd2, 1500);
+			snd2=FreeVerb2.ar( BPF.ar(snd2[0], 3500, 1.5), BPF.ar(snd2[1], 3500, 1.5), 1.0, 0.95, 0.15 );
+			// another kind of reverb
+			// snd2 = DelayN.ar(snd2, 0.03, 0.03);
+			// snd2 = CombN.ar(snd2, 0.1, {Rand(0.01,0.099)}!32, 4);
+			// snd2 = SplayAz.ar(2, snd2);
+			// snd2 = LPF.ar(snd2, 1500);
+			// 5.do{snd2 = AllpassN.ar(snd2, 0.1, {Rand(0.01,0.099)}!2, 3)};
+			// snd2 = LPF.ar(snd2, 1500);
 			snd2 = LeakDC.ar(snd2);
 
-			snd2=snd2*(1-EnvGen.ar(Env.perc(reverbAttack,reverbDecay), t_trig));
+			snd2=snd2*(1-(0.8*EnvGen.ar(Env.perc(reverbAttack,reverbDecay), t_trig)+0.2));
 
 			Out.ar(out,snd2);
 		}).add;
