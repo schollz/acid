@@ -47,62 +47,81 @@ Engine_Acid : CroneEngine {
 			Out.ar(out,snd2);
 		}).add;
 
+		SynthDef("chord",{
+			arg note=60,amp=0.5,attack=0.01,decay=2,t_trig=1,mod1=0.5,mod2=0.5;
+			var snd, env,detuning;
+			var envSign=Select.kr((attack>decay),[1,1.neg]);
+			detuning=LinExp.kr(mod1,0,1,0.001/10,0.001*10).poll;
+			snd= Splay.arFill(2, { |i|
+				var hz=(note+Rand(-0.05,0.05)).midicps;
+				var osc = Mix.ar(SawDPW.ar(hz * 2.pow(detuning * [-3, 0, 3])));
+				var filter = LPF.ar(osc, LinExp.kr(LFTri.kr(Rand(0.2,4*(mod2-0.5)+0.3),Rand(0,2)),-1,1,200,1500));
+				filter * 0.06;
+			}, levelComp: false);
+			env = EnvGen.ar(Env.perc(attack,decay*2,amp,[4*envSign,-2]),t_trig,doneAction:2);
+			snd = snd * env;
+			snd=Select.ar(mod2>0.5,[snd,snd*LFPar.ar((mod2-0.5).range(1,7))]);
+			snd=HPF.ar(snd,80);
+			snd=LeakDC.ar(snd);
+			Out.ar(0,snd);
+		}).add;
+
 		// hotroded version of "08091500Acid309 by_otophilia"
 
 		SynthDef("kick", {
-			arg outBus=0, amp=1.0, pitch=40,
+			arg outBus=0, amp=1.0, mod1=0.5, mod2=0.5, pitch=40,
 			reverbOut, reverbSend=0, delayOut, delaySend=0;
 			var env0, env1, env1m, out, snd;
 
-			env0 =  EnvGen.ar(Env.new([0.5, 1, 0.5, 0], [0.005, 0.06, 0.26], [-4, -2, -4]), doneAction:2);
-			env1 = EnvGen.ar(Env.new([110, 59, 29], [0.005, 0.29], [-4, -5]));
+			env0 =  EnvGen.ar(Env.new([0.5, 1, 0.5, 0], [0.005, 0.06, 0.26*LinExp.kr(mod1,0,1,0.1,10).poll], [-4, -2, -4]), doneAction:2);
+			env1 = EnvGen.ar(Env.new([110, 59, 29], [0.005, 0.3*LinExp.kr(mod1,0,1,0.3,3)], [-4, -5]));
 			env1m = env1.midicps;
-
+			
 			out = LFPulse.ar(env1m, 0, 0.5, 1, -0.5);
-			out = out + WhiteNoise.ar(1);
+			out = out + WhiteNoise.ar(1*LinExp.kr(mod2,0,1,1/100,100).poll);
 			out = LPF.ar(out, env1m*1.5, env0);
 			out = out + SinOsc.ar(env1m, 0.5, env0);
-
+			
 			out = out * 1.2;
-			out = out.clip2(1) * amp;
-
+			out = out.clip2(1) * amp * 0.25;
+			
 			snd = out.dup;
-
+			
 			Out.ar(delayOut,snd*delaySend);
 			Out.ar(reverbOut,snd*reverbSend);
 			Out.ar(outBus, snd);
-		}).add;
+		}).play;
 
 		SynthDef("snare", {
-			arg outBus=0, amp=1.0, pitch=40,
+			arg outBus=0, amp=1.0, mod1=0.5, mod2=0.5, pitch=40,
 			reverbOut, reverbSend=0, delayOut, delaySend=0;
 			var env0, env1, env2, env1m, oscs, noise, out, snd;
-
-			env0 = EnvGen.ar(Env.new([0.5, 1, 0.5, 0], [0.005, 0.03, 0.10], [-4, -2, -4]));
-			env1 = EnvGen.ar(Env.new([110, 60, 49], [0.005, 0.1], [-4, -5]));
+			
+			env0 = EnvGen.ar(Env.new([0.5, 1, 0.5, 0], [0.005, 0.03, 0.10]*LinExp.kr(mod1,0,1,1/2,2), [-4, -2, -4]));
+			env1 = EnvGen.ar(Env.new([110, 60, 49], [0.005, 0.1]*LinExp.kr(mod1,0,1,1/2,2), [-4, -5]));
 			env1m = env1.midicps;
-			env2 = EnvGen.ar(Env.new([1, 0.4, 0], [0.05, 0.13], [-2, -2]), doneAction:2);
-
+			env2 = EnvGen.ar(Env.new([1, 0.4, 0], [0.05, 0.13]*LinExp.kr(mod1,0,1,1/2,2), [-2, -2]), doneAction:2);
+			
 			oscs = LFPulse.ar(env1m, 0, 0.5, 1, -0.5) + LFPulse.ar(env1m * 1.6, 0, 0.5, 0.5, -0.25);
 			oscs = LPF.ar(oscs, env1m*1.2, env0);
 			oscs = oscs + SinOsc.ar(env1m, 0.8, env0);
-
-			noise = WhiteNoise.ar(0.2);
+			
+			noise = WhiteNoise.ar(0.2*LinExp.kr(mod2,0,1,1/20,2));
 			noise = HPF.ar(noise, 200, 2);
 			noise = BPF.ar(noise, 6900, 0.6, 3) + noise;
 			noise = noise * env2;
-
+			
 			out = oscs + noise;
-			out = out.clip2(1) * amp;
+			out = out.clip2(1) * amp * 0.3;
 			snd = out.dup;
-
+			
 			Out.ar(delayOut,snd*delaySend);
 			Out.ar(reverbOut,snd*reverbSend);
 			Out.ar(outBus, snd);
 		}).add;
 
-		SynthDef("clap", {
-			arg outBus=0, amp=1.0, pitch=40,
+		SynthDef("clap_v0", {
+			arg outBus=0, amp=1.0, mod1=0.5, mod2=0.5, pitch=40,
 			reverbOut, reverbSend=0, delayOut, delaySend=0;
 			var env1, env2, out, noise1, noise2, snd;
 
@@ -128,8 +147,28 @@ Engine_Acid : CroneEngine {
 			Out.ar(outBus, snd);
 		}).add;
 
+		SynthDef("clap", {
+			arg outBus=0, amp=1.0, mod1=0.5, mod2=0.5, pitch=40,
+			reverbOut, reverbSend=0, delayOut, delaySend=0;
+			var snd,env, decay;
+			var attack = TExpRand.kr(0.01,0.04,Impulse.kr(0));
+			var  clapFrequency=DC.kr((4311/(attack*1000+28.4))+11.44); 
+
+			decay = LinExp.kr(mod1,0,1,0.03,1);
+			snd = [WhiteNoise.ar(1),WhiteNoise.ar(1)];
+			env = Decay.ar(Impulse.ar(clapFrequency),1/clapFrequency,0.85,0.15)*Trig.ar(1,attack+0.001)+EnvGen.ar(Env.new(levels: [0.001, 0.001, 1,0.0001], times: [attack,0.001, decay],curve:\exponential),doneAction:2);
+			snd = Select.ar((mod2>0.5),[LPF.ar(snd,LinExp.kr(mod2,0,0.5,500,12000)),HPF.ar(snd,LinExp.kr(mod2,0.5,1,100,4000))]);
+
+			snd = snd * env * 0.3;
+
+			Out.ar(delayOut,snd*delaySend);
+			Out.ar(reverbOut,snd*reverbSend);
+			Out.ar(outBus, snd);
+		}).add;
+
+
 		SynthDef("hat", {
-			arg outBus=0, amp=1.0, pitch=40,
+			arg outBus=0, amp=1.0, mod1=0.5, mod2=0.5, pitch=40,
 			reverbOut, reverbSend=0, delayOut, delaySend=0;
 			var env1, env2, out, oscs1, noise, n, n2, snd;
 
@@ -171,7 +210,7 @@ Engine_Acid : CroneEngine {
 		}).add;
 
 		SynthDef("acid", {
-			arg outBus=0, amp=1.0,
+			arg outBus=0, amp=1.0, mod1=0.5, mod2=0.5,
 			gate=1, pitch=50,
 			reverbOut, reverbSend=0, delayOut, delaySend=0;
 			var env1, env2, out, snd;
@@ -192,7 +231,7 @@ Engine_Acid : CroneEngine {
 
 
 		SynthDef("acid2", {
-			arg outBus=0, amp=1.0,
+			arg outBus=0, amp=1.0, mod1=0.5, mod2=0.5,
 			gate=1, pitch=50,
 			reverbOut, reverbSend=0, delayOut, delaySend=0;
 			var env1, env2, out, snd;
