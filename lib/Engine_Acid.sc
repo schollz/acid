@@ -1,9 +1,9 @@
 // Engine_Acid
 Engine_Acid : CroneEngine {
 	// <acid>
-	var acidSynth;
 	var acidBusDelay;
 	var acidBusReverb;
+	var acidFX;
 	var acidSynthBass;
 	var acidSynthLead;
 	// </acid>
@@ -19,7 +19,7 @@ Engine_Acid : CroneEngine {
 
 		// add synth defs
 		SynthDef("mxfx",{ 
-			arg inDelay, inReverb, reverb=0.05, out, secondsPerBeat=1,delayBeats=4,delayFeedback=0.1,bufnumDelay, t_trig=1;
+			arg inDelay, inReverb, reverb=0.05, out, secondsPerBeat=1/16,delayBeats=4,delayFeedback=0.1,bufnumDelay, gate=1;
 			var snd,snd2,y,z;
 
 			// delay
@@ -42,7 +42,7 @@ Engine_Acid : CroneEngine {
 			snd2 = LPF.ar(snd2, 1500);
 			snd2 = LeakDC.ar(snd2);
 
-			snd2=snd2*EnvGen.kr(Env.new([0.02, 0.3, 0.02], [0.4, 0.01], [3, -4], 1), 1-Trig.kr(t_trig, 0.01))
+			snd2=snd2*EnvGen.kr(Env.new([0.02, 0.3, 0.02], [0.4, 0.01], [3, -4], 1), 1-Trig.kr(gate, 0.01));
 
 			Out.ar(out,snd2);
 		}).add;
@@ -52,7 +52,7 @@ Engine_Acid : CroneEngine {
 		SynthDef("kick", {
 			arg outBus=0, amp=1.0, pitch=40,
 			reverbOut, reverbSend=0, delayOut, delaySend=0;
-			var env0, env1, env1m, out;
+			var env0, env1, env1m, out, snd;
 
 			env0 =  EnvGen.ar(Env.new([0.5, 1, 0.5, 0], [0.005, 0.06, 0.26], [-4, -2, -4]), doneAction:2);
 			env1 = EnvGen.ar(Env.new([110, 59, 29], [0.005, 0.29], [-4, -5]));
@@ -64,16 +64,19 @@ Engine_Acid : CroneEngine {
 			out = out + SinOsc.ar(env1m, 0.5, env0);
 
 			out = out * 1.2;
-			out = out.clip2(1);
+			out = out.clip2(1) * amp;
+
+			snd = out.dup;
+
 			Out.ar(delayOut,snd*delaySend);
 			Out.ar(reverbOut,snd*reverbSend);
-			Out.ar(outBus, out.dup);
+			Out.ar(outBus, snd);
 		}).add;
 
 		SynthDef("snare", {
 			arg outBus=0, amp=1.0, pitch=40,
 			reverbOut, reverbSend=0, delayOut, delaySend=0;
-			var env0, env1, env2, env1m, oscs, noise, out;
+			var env0, env1, env2, env1m, oscs, noise, out, snd;
 
 			env0 = EnvGen.ar(Env.new([0.5, 1, 0.5, 0], [0.005, 0.03, 0.10], [-4, -2, -4]));
 			env1 = EnvGen.ar(Env.new([110, 60, 49], [0.005, 0.1], [-4, -5]));
@@ -91,16 +94,17 @@ Engine_Acid : CroneEngine {
 
 			out = oscs + noise;
 			out = out.clip2(1) * amp;
+			snd = out.dup;
 
 			Out.ar(delayOut,snd*delaySend);
 			Out.ar(reverbOut,snd*reverbSend);
-			Out.ar(outBus, out.dup);
+			Out.ar(outBus, snd);
 		}).add;
 
 		SynthDef("clap", {
 			arg outBus=0, amp=1.0, pitch=40,
 			reverbOut, reverbSend=0, delayOut, delaySend=0;
-			var env1, env2, out, noise1, noise2;
+			var env1, env2, out, noise1, noise2, snd;
 
 			env1 = EnvGen.ar(Env.new([0, 1, 0, 1, 0, 1, 0, 1, 0], [0.001, 0.013, 0, 0.01, 0, 0.01, 0, 0.03], [0, -3, 0, -3, 0, -3, 0, -4]));
 			env2 = EnvGen.ar(Env.new([0, 1, 0], [0.02, 0.3], [0, -4]), doneAction:2);
@@ -117,15 +121,17 @@ Engine_Acid : CroneEngine {
 			out = out * 2;
 			out = out.softclip * amp;
 
+			snd = out.dup;
+
 			Out.ar(delayOut,snd*delaySend);
 			Out.ar(reverbOut,snd*reverbSend);
-			Out.ar(outBus, out.dup);
+			Out.ar(outBus, snd);
 		}).add;
 
 		SynthDef("hat", {
 			arg outBus=0, amp=1.0, pitch=40,
 			reverbOut, reverbSend=0, delayOut, delaySend=0;
-			var env1, env2, out, oscs1, noise, n, n2;
+			var env1, env2, out, oscs1, noise, n, n2, snd;
 
 			n = 5;
 			thisThread.randSeed = 4;
@@ -157,46 +163,52 @@ Engine_Acid : CroneEngine {
 			out = out.softclip;
 			out = out * amp;
 
+			snd = out.dup;
+
 			Out.ar(delayOut,snd*delaySend);
 			Out.ar(reverbOut,snd*reverbSend);
-			Out.ar(outBus, out.dup);
+			Out.ar(outBus, snd);
 		}).add;
 
 		SynthDef("acid", {
 			arg outBus=0, amp=1.0,
-			t_trig=1, pitch=50,
+			gate=1, pitch=50,
 			reverbOut, reverbSend=0, delayOut, delaySend=0;
-			var env1, env2, out;
-			pitch = Lag.kr(pitch, 0.12 * (1-Trig.kr(t_trig, 0.001)) * t_trig);
-			env1 = EnvGen.ar(Env.new([0, 1.0, 0, 0], [0.001, 2.0, 0.04], [0, -4, -4], 2), t_trig, amp);
-			env2 = EnvGen.ar(Env.adsr(0.001, 0.8, 0, 0.8, 70, -4), t_trig);
+			var env1, env2, out, snd;
+			pitch = Lag.kr(pitch, 0.12 * (1-Trig.kr(gate, 0.001)) * gate);
+			env1 = EnvGen.ar(Env.new([0, 1.0, 0, 0], [0.001, 2.0, 0.04], [0, -4, -4], 2), gate, amp);
+			env2 = EnvGen.ar(Env.adsr(0.001, 0.8, 0, 0.8, 70, -4), gate);
 			out = LFSaw.ar(pitch.midicps, 2, -1);
 
 			out = MoogLadder.ar(out, (pitch + env2/2).midicps+(LFNoise1.kr(0.2,1100,1500)),LFNoise1.kr(0.4,0.9).abs+0.3,3);
 			out = LeakDC.ar((out * env1).tanh/2.7);
 
+			snd = out.dup;
+
 			Out.ar(delayOut,snd*delaySend);
 			Out.ar(reverbOut,snd*reverbSend);
-			Out.ar(outBus, out.dup);
+			Out.ar(outBus, snd);
 		}).add;
 
 
 		SynthDef("acid2", {
 			arg outBus=0, amp=1.0,
-			t_trig=1, pitch=50,
+			gate=1, pitch=50,
 			reverbOut, reverbSend=0, delayOut, delaySend=0;
-			var env1, env2, out;
-			pitch = Lag.kr(pitch, 0.12 * (1-Trig.kr(t_trig, 0.001)) * t_trig);
-			env1 = EnvGen.ar(Env.perc(0.001,0.7,4,-4), t_trig, amp);
-			env2 = EnvGen.ar(Env.perc(0.001,0.3,600*MouseY.kr(0.5,4),-3), t_trig);
+			var env1, env2, out, snd;
+			pitch = Lag.kr(pitch, 0.12 * (1-Trig.kr(gate, 0.001)) * gate);
+			env1 = EnvGen.ar(Env.perc(0.01,0.7,4,-4), gate, amp);
+			env2 = EnvGen.ar(Env.perc(0.001,0.3,600*SinOsc.kr(0.123).range(0.5,4),-3), gate);
 			out = LFPulse.ar(pitch.midicps, 0, 0.5);
 
-			out = MoogLadder.ar(out, 100+pitch.midicps + env2,MouseX.kr(0.01,0.2,1));
+			out = MoogLadder.ar(out, 100+pitch.midicps + env2,LinExp.kr(SinOsc.kr(0.213),-1,1,0.01,0.2));
 			out = LeakDC.ar((out * env1).tanh);
+
+			snd = out.dup;
 
 			Out.ar(delayOut,snd*delaySend);
 			Out.ar(reverbOut,snd*reverbSend);
-			Out.ar(outBus, out.dup);
+			Out.ar(outBus, snd);
 		}).add;
 
 		// initialize fx synth and bus
@@ -213,7 +225,20 @@ Engine_Acid : CroneEngine {
 		// add norns commands
 		this.addCommand("acid_bass","ffff",{ arg msg;
 			acidSynthBass.set(
-				\t_trig,1,
+				\amp,msg[1],
+				\pitch,msg[2],
+				\delaySend,msg[3],
+				\reverbSend,msg[4],
+			);
+		});
+		this.addCommand("acid_bass_gate","i",{ arg msg;
+			acidSynthBass.set(
+				\gate,msg[1],
+			);
+		});
+
+		this.addCommand("acid_lead","ffff",{ arg msg;
+			acidSynthLead.set(
 				\amp,msg[1],
 				\pitch,msg[2],
 				\delaySend,msg[3],
@@ -221,13 +246,9 @@ Engine_Acid : CroneEngine {
 			);
 		});
 
-		this.addCommand("acid_lead","ffff",{ arg msg;
+		this.addCommand("acid_lead_gate","i",{ arg msg;
 			acidSynthLead.set(
-				\t_trig,1,
-				\amp,msg[1],
-				\pitch,msg[2],
-				\delaySend,msg[3],
-				\reverbSend,msg[4],
+				\gate,msg[1],
 			);
 		});
 
@@ -239,8 +260,8 @@ Engine_Acid : CroneEngine {
 			]);
 		});
 
-		this.addCommand("acid_reverb","",{ arg msg;
-			acidFX.set(\t_trig,1)
+		this.addCommand("acid_reverb","i",{ arg msg;
+			acidFX.set(\gate,msg[1])
 		});
 		// </acid>
 	}
