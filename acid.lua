@@ -38,7 +38,8 @@ end
 function init2()
   inited=true
 
-  song={root=36,scale="Major"}
+  song={root=36,scale="Major",notes={},chord_progression=s{"I"},measure_length=16,chord_current=""}
+  song.measure_note=song.measure_length
 
   sequencer=lattice:new{
     ppqn=96
@@ -48,8 +49,18 @@ function init2()
   local current_notes={}
   sequencer:new_pattern({
     action=function(t)
-      for _,ins in ipairs({"bass","lead","kick","snare","hat","clap"}) do
-        i_[ins]:pulse()
+      -- do chord changes
+      song.measure_note=song.measure_note+1
+      if song.measure_note>song.measure_length then
+        song.measure_note=1
+        song.chord_current=song.chord_progression()
+        song.notes=MusicUtil.generate_chord_roman(song.root,song.scale,song.chord_current)
+        print("current chord: "..song.chord_current)
+      end
+
+      -- TODO: add chord to pulses
+      for _,ins in ipairs({"bass","lead","kick","snare","hat","clap","reverb"}) do
+        i_[ins]:pulse(song.notes)
       end
     end,
     division=1/16

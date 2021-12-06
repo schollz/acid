@@ -46,7 +46,7 @@ function Instrument:randomize_all()
   self:randomize_k("duration")
 end
 
-function Instrument:pulse()
+function Instrument:pulse(notes)
   self.seq_gate0=self.seq_gate()
   if not self.seq_gate0 then
     do return end
