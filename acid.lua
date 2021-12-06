@@ -68,26 +68,26 @@ end
 function params_randomize_all()
   for _,ins in ipairs({"bass","lead"}) do
     i_[ins].seed=math.random(1,100)
-    params:set("acid_"..ins.."_n",math.random(4,16))
+    params:set("acid_"..ins.."_n",math.random(1,8))
     params:set("acid_"..ins.."_k",math.random(50,100))
-    if ins=="lead" then
-      params:set("acid_"..ins.."_w",math.random(0,3)*2+1)
-    else
-      params:set("acid_"..ins.."_w",math.random(0,3)*2)
-    end
+    -- if ins=="lead" then
+    --   params:set("acid_"..ins.."_w",math.random(0,3)*2+1)
+    -- else
+    --   params:set("acid_"..ins.."_w",math.random(0,3)*2)
+    -- end
     params:set("acid_"..ins.."_amp_1",12)
     params:set("acid_"..ins.."_amp_2",12)
     params:set("acid_"..ins.."_amp_3",4)
-    params:set("acid_"..ins.."_amp_4",12)
-    params:set("acid_"..ins.."_amp_5",12)
-    params:set("acid_"..ins.."_amp_6",4)
-    params:set("acid_"..ins.."_amp_7",12)
-    params:set("acid_"..ins.."_amp_8",12)
+    -- params:set("acid_"..ins.."_amp_4",12)
+    -- params:set("acid_"..ins.."_amp_5",12)
+    -- params:set("acid_"..ins.."_amp_6",4)
+    -- params:set("acid_"..ins.."_amp_7",12)
+    -- params:set("acid_"..ins.."_amp_8",12)
     for _,thing in ipairs({"note","duration"}) do
-      params:set("acid_"..ins.."_"..thing,math.random(1,15))
-      for i=1,16 do
+      params:set("acid_"..ins.."_"..thing,math.random(1,8))
+      for i=1,8 do
         local k="acid_"..ins.."_"..thing.."_"..i
-        params:set(k,math.random(0,15))
+        params:set(k,math.random(1,8))
       end
     end
     i_[ins]:randomize_all()
@@ -103,8 +103,9 @@ end
 
 function params_init()
   i_={}
-  local control1_16=controlspec.new(1,16,'lin',1,1,'',1/16,true)
-  local control1_15=controlspec.new(1,15,'lin',1,1,'',1/15,true)
+  local control1_8=controlspec.new(1,8,'lin',1,1,'',1/8,true)
+  local control1_7=controlspec.new(1,7,'lin',1,1,'',1/7,true)
+  local control0_7=controlspec.new(0,7,'lin',1,0,'',1/8,true)
   local control0_15=controlspec.new(0,15,'lin',1,0,'',1/16,true)
   local control0_100p=controlspec.new(0,100,'lin',1,50,'%',1/100,true)
   local control_small_time=controlspec.new(0,1,'lin',0.01,0.1,'s',0.01/1)
@@ -115,13 +116,19 @@ function params_init()
     clap={n=16,k=4/16*100,w=2},
     hat={n=16,k=5/16*100,w=4},
   }
-  for _, ins in ipairs(percussion) do
-    i_[ins]=instrument_:new({id=ins})
+  local shared_parms=function(ins)
     params:add_separator(ins)
+    -- mixer volume
+    params:add_control("acid_"..ins.."_amp_scale","amp scale",control1_7)
+    params:set_action("acid_"..ins.."_amp_scale",function(n)
+      print("setting amp scale",ins,n)
+      i_[ins]:set_amp_scale(n)
+    end)
+
     -- er "n"
-    params:add_control("acid_"..ins.."_n","n",control1_16)
+    params:add_control("acid_"..ins.."_n","n",control1_8)
     params:set_action("acid_"..ins.."_n",function(n)
-      i_[ins]:set_n(n)
+      i_[ins]:set_n_index(n)
     end)
     -- er "k"
     params:add_control("acid_"..ins.."_k","k",control0_100p)
@@ -129,28 +136,14 @@ function params_init()
       i_[ins]:set_kp(kp/100)
     end)
     -- er "w"
-    params:add_control("acid_"..ins.."_w","w",control0_15)
-    params:set_action("acid_"..ins.."_w",function(w)
-      print(ins.." w",w)
-      i_[ins]:set_w(w)
+    params:add_control("acid_"..ins.."_w","w",control0_100p)
+    params:set_action("acid_"..ins.."_w",function(wp)
+      i_[ins]:set_wp(wp/100)
     end)
-    for _, erthing in ipairs({"n","k","w"}) do 
-      params:set("acid_"..ins.."_"..erthing,percussion_defaults[ins][erthing])
-    end
-
-    -- delay/reverb send
-    for _, fxname in ipairs({"delay","reverb"}) do 
-      local k="acid_"..ins.."_"..fxname
-      params:add_control(k,fxname.." send",control0_100p)
-      params:set_action(k,function(v)
-        i_[ins]:set_fx(fxname,v/100)
-      end)  
-      params:set(k,0)
-    end
-    -- amp
-    params:add_group("amps",16)
-    for i=1,16 do 
-      local k="acid_"..ins.."_amp_"..i 
+    -- amp sequence
+    params:add_group("amps",8)
+    for i=1,8 do
+      local k="acid_"..ins.."_amp_"..i
       params:add_control(k,i,control0_15)
       params:set_action(k,function(v)
         i_[ins]:set_amp(i,v)
@@ -159,60 +152,57 @@ function params_init()
         params:set(k,8)
       end
     end
-  end
-  local instruments={"bass","lead"}
-  for _,ins in ipairs(instruments) do
-    i_[ins]=instrument_:new({id=ins})
-    params:add_separator(ins)
-    -- er "n"
-    params:add_control("acid_"..ins.."_n","n",control1_16)
-    params:set_action("acid_"..ins.."_n",function(n)
-      i_[ins]:set_n(n)
-    end)
-    -- er "k"
-    params:add_control("acid_"..ins.."_k","k",control0_100p)
-    params:set_action("acid_"..ins.."_k",function(kp)
-      i_[ins]:set_kp(kp/100)
-    end)
-    -- er "w"
-    params:add_control("acid_"..ins.."_w","w",control0_15)
-    params:set_action("acid_"..ins.."_w",function(w)
-      --print(ins.." w",w)
-      i_[ins]:set_w(w)
-    end)
+    -- mods 1 and 2
+    for i=1,2 do
+      local k="acid_"..ins.."_mod"..i
+      params:add_control(k,"mod "..i,control0_100p)
+      params:set_action(k,function(p)
+        i_[ins]:set_mod(i,p/100)
+      end)
+      params:set(k,50)
+    end
+
+    if ins=="lead" or ins=="bass" then
+      -- notes/durations
+      for _,thing in ipairs({"note","duration"}) do
+        params:add_group(thing.."s",9)
+        params:add_control("acid_"..ins.."_"..thing,"# "..thing.."s",control1_8)
+        params:set_action("acid_"..ins.."_"..thing,function(v)
+          i_[ins]:set_num_i(thing,v)
+        end)
+        for i=1,8 do
+          local k="acid_"..ins.."_"..thing.."_"..i
+          params:add_control(k,i,control0_15)
+          params:set_action(k,function(v)
+            --print("setting "..ins.." i to "..v)
+            i_[ins]:set_freq(thing,i,v)
+          end)
+        end
+      end
+    end
     -- delay/reverb send
-    for _, fxname in ipairs({"delay","reverb"}) do 
+    for _,fxname in ipairs({"delay","reverb"}) do
       local k="acid_"..ins.."_"..fxname
       params:add_control(k,fxname.." send",control0_100p)
       params:set_action(k,function(v)
         i_[ins]:set_fx(fxname,v/100)
-      end)  
+      end)
       params:set(k,0)
     end
-    params:add_group("amps",16)
-    for i=1,16 do 
-      local k="acid_"..ins.."_amp_"..i 
-      params:add_control(k,i,control0_15)
-      params:set_action(k,function(v)
-        i_[ins]:set_amp(i,v)
-      end)
+  end
+
+  -- insert the parameters
+  for _,ins in ipairs(percussion) do
+    i_[ins]=instrument_:new({id=ins})
+    shared_parms(ins)
+    for _,erthing in ipairs({"n","k","w"}) do
+      params:set("acid_"..ins.."_"..erthing,percussion_defaults[ins][erthing])
     end
-    -- notes/durations
-    for _,thing in ipairs({"note","duration"}) do
-      params:add_group(thing.."s",17)
-      params:add_control("acid_"..ins.."_"..thing,"# "..thing.."s",control0_15)
-      params:set_action("acid_"..ins.."_"..thing,function(v)
-        i_[ins]:set_num(thing,v)
-      end)
-      for i=1,16 do
-        local k="acid_"..ins.."_"..thing.."_"..i
-        params:add_control(k,i,control0_15)
-        params:set_action(k,function(v)
-          --print("setting "..ins.." i to "..v)
-          i_[ins]:set_freq(thing,i,v)
-        end)
-      end
-    end
+  end
+  local instruments={"bass","lead"}
+  for _,ins in ipairs(instruments) do
+    i_[ins]=instrument_:new({id=ins})
+    shared_parms(ins)
   end
 
   -- effects
