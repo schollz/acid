@@ -116,15 +116,7 @@ function params_init()
     clap={n=16,k=4/16*100,w=2},
     hat={n=16,k=5/16*100,w=4},
   }
-  local shared_parms=function(ins)
-    params:add_separator(ins)
-    -- mixer volume
-    params:add_control("acid_"..ins.."_amp_scale","amp scale",control1_7)
-    params:set_action("acid_"..ins.."_amp_scale",function(n)
-      print("setting amp scale",ins,n)
-      i_[ins]:set_amp_scale(n)
-    end)
-
+  local knw=function(ins)
     -- er "n"
     params:add_control("acid_"..ins.."_n","n",control1_8)
     params:set_action("acid_"..ins.."_n",function(n)
@@ -140,6 +132,17 @@ function params_init()
     params:set_action("acid_"..ins.."_w",function(wp)
       i_[ins]:set_wp(wp/100)
     end)
+  end
+  local shared_parms=function(ins)
+    params:add_separator(ins)
+    -- mixer volume
+    params:add_control("acid_"..ins.."_amp_scale","amp scale",control1_7)
+    params:set_action("acid_"..ins.."_amp_scale",function(n)
+      print("setting amp scale",ins,n)
+      i_[ins]:set_amp_scale(n)
+    end)
+
+    knw(ins)
     -- amp sequence
     params:add_group("amps",8)
     for i=1,8 do
@@ -180,6 +183,7 @@ function params_init()
         end
       end
     end
+
     -- delay/reverb send
     for _,fxname in ipairs({"delay","reverb"}) do
       local k="acid_"..ins.."_"..fxname
@@ -189,6 +193,7 @@ function params_init()
       end)
       params:set(k,0)
     end
+
   end
 
   -- insert the parameters
@@ -206,7 +211,8 @@ function params_init()
   end
 
   -- effects
-
+  i_["reverb"]=instrument_:new({id="reverb"})
+  knw("reverb")
   params:add_control("acid_reverb_attack","reverb attack",control_small_time)
   params:add_control("acid_reverb_decay","reverb decay",control_small_time)
 end

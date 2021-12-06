@@ -66,13 +66,12 @@ function Instrument:pulse()
       clock.sleep(clock.get_beat_sec()/16*self.seq_duration0)
       engine["acid_"..self.id.."_gate"](0)
     end)
+  elseif self.id=="reverb" then
+    engine.acid_reverb(1,params:get("acid_reverb_attack"),params:get("acid_reverb_decay"))
   elseif self.id=="kick" or self.id=="snare" or self.id=="hat" or self.id=="clap" then
     print(self.id,self.seq_amp0,self.delay_send,self.reverb_send)
     engine.acid_drum(self.id,self.seq_amp0,self.delay_send,self.reverb_send)
     -- TODO: make reverb its own instrument
-    if self.id=="kick" then
-      engine.acid_reverb(1,params:get("acid_reverb_attack"),params:get("acid_reverb_decay"))
-    end
   end
 end
 
