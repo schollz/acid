@@ -176,6 +176,12 @@ function params_init()
       params:set(k,50)
     end
 
+    -- add attack/decay parameters for chords
+    if ins=="chord" then
+      params:add_control("acid_chord_attack","attack",control_small_time)
+      params:add_control("acid_chord_decay","decay",control_small_time)
+    end
+
     if ins=="lead" or ins=="bass" then
       -- notes/durations
       for _,thing in ipairs({"note","duration"}) do

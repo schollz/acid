@@ -264,26 +264,46 @@ Engine_Acid : CroneEngine {
 		context.server.sync;
 
 		// add norns commands
-		this.addCommand("acid_bass","ffff",{ arg msg;
+		this.addCommand("acid_chord","ffffffff",{ arg msg;
+			Synth.before(acidFX,"chord",[
+				\amp,msg[1],
+				\pitch,msg[2],
+				\mod1,msg[3],
+				\mod2,msg[4],
+				\attack,msg[5],
+				\decay,msg[6],
+				\delaySend,msg[7],
+				\reverbSend,msg[8],
+				\delayOut,acidBusDelay,
+				\reverbOut,acidBusReverb,
+			]);
+		});
+
+		this.addCommand("acid_bass","ffffff",{ arg msg;
 			acidSynthBass.set(
 				\amp,msg[1],
 				\pitch,msg[2],
-				\delaySend,msg[3],
-				\reverbSend,msg[4],
+				\mod1,msg[3],
+				\mod2,msg[4],
+				\delaySend,msg[5],
+				\reverbSend,msg[6],
 			);
 		});
+
 		this.addCommand("acid_bass_gate","i",{ arg msg;
 			acidSynthBass.set(
 				\gate,msg[1],
 			);
 		});
 
-		this.addCommand("acid_lead","ffff",{ arg msg;
+		this.addCommand("acid_lead","ffffff",{ arg msg;
 			acidSynthLead.set(
 				\amp,msg[1],
 				\pitch,msg[2],
-				\delaySend,msg[3],
-				\reverbSend,msg[4],
+				\mod1,msg[3],
+				\mod2,msg[4],
+				\delaySend,msg[5],
+				\reverbSend,msg[6],
 			);
 		});
 
@@ -293,13 +313,15 @@ Engine_Acid : CroneEngine {
 			);
 		});
 
-		this.addCommand("acid_drum","sfff",{ arg msg;
+		this.addCommand("acid_drum","sfffff",{ arg msg;
 			Synth.before(acidFX,msg[1].asString,[
 				\amp,msg[2],
+				\mod1,msg[3],
+				\mod2,msg[4],
 				\delayOut,acidBusDelay,
-				\delaySend,msg[3],
+				\delaySend,msg[5],
 				\reverbOut,acidBusReverb,
-				\reverbSend,msg[4],
+				\reverbSend,msg[6],
 			]);
 		});
 

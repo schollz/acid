@@ -47,6 +47,7 @@ function Instrument:randomize_all()
 end
 
 function Instrument:pulse(notes)
+  -- TODO: use "notes" information to inform which note is played
   self.seq_gate0=self.seq_gate()
   if not self.seq_gate0 then
     do return end
@@ -66,6 +67,8 @@ function Instrument:pulse(notes)
       clock.sleep(clock.get_beat_sec()/16*self.seq_duration0)
       engine["acid_"..self.id.."_gate"](0)
     end)
+  elseif self.id=="chord" then
+    -- TODO: play chords with the pad
   elseif self.id=="reverb" then
     engine.acid_reverb(1,params:get("acid_reverb_attack"),params:get("acid_reverb_decay"))
   elseif self.id=="kick" or self.id=="snare" or self.id=="hat" or self.id=="clap" then
