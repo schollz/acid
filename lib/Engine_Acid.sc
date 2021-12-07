@@ -50,12 +50,12 @@ Engine_Acid : CroneEngine {
 		}).add;
 
 		SynthDef("chord",{
-			arg note=60,amp=0.5,attack=0.01,decay=2,t_trig=1,mod1=0.5,mod2=0.5;
+			arg pitch=60,amp=0.5,attack=0.01,decay=2,t_trig=1,mod1=0.5,mod2=0.5;
 			var snd, env,detuning;
 			var envSign=Select.kr((attack>decay),[1,1.neg]);
-			detuning=LinExp.kr(mod1,0,1,0.001/10,0.001*10).poll;
+			detuning=LinExp.kr(mod1,0,1,0.001/10,0.001*10);
 			snd= Splay.arFill(2, { |i|
-				var hz=(note+Rand(-0.05,0.05)).midicps;
+				var hz=(pitch+Rand(-0.05,0.05)).midicps;
 				var osc = Mix.ar(SawDPW.ar(hz * 2.pow(detuning * [-3, 0, 3])));
 				var filter = LPF.ar(osc, LinExp.kr(LFTri.kr(Rand(0.2,4*(mod2-0.5)+0.3),Rand(0,2)),-1,1,200,1500));
 				filter * 0.06;
@@ -75,19 +75,19 @@ Engine_Acid : CroneEngine {
 			reverbOut, reverbSend=0, delayOut, delaySend=0;
 			var env0, env1, env1m, out, snd;
 
-			env0 =  EnvGen.ar(Env.new([0.5, 1, 0.5, 0], [0.005, 0.06, 0.26*LinExp.kr(mod1,0,1,0.1,10).poll], [-4, -2, -4]), doneAction:2);
+			env0 =  EnvGen.ar(Env.new([0.5, 1, 0.5, 0], [0.005, 0.06, 0.26*LinExp.kr(mod1,0,1,0.1,10)], [-4, -2, -4]), doneAction:2);
 			env1 = EnvGen.ar(Env.new([110, 59, 29], [0.005, 0.3*LinExp.kr(mod1,0,1,0.3,3)], [-4, -5]));
 			env1m = env1.midicps;
 			
 			out = LFPulse.ar(env1m, 0, 0.5, 1, -0.5);
-			out = out + WhiteNoise.ar(1*LinExp.kr(mod2,0,1,1/100,100).poll);
+			out = out + WhiteNoise.ar(1*LinExp.kr(mod2,0,1,1/100,100));
 			out = LPF.ar(out, env1m*1.5, env0);
 			out = out + SinOsc.ar(env1m, 0.5, env0);
 			
 			out = out * 1.2;
 			out = out.clip2(1) * amp * 0.25;
 			
-			snd = out.dup;
+			snd = out.dup* -12.dbamp;
 			
 			Out.ar(delayOut,snd*delaySend);
 			Out.ar(reverbOut,snd*reverbSend);
@@ -115,7 +115,7 @@ Engine_Acid : CroneEngine {
 			
 			out = oscs + noise;
 			out = out.clip2(1) * amp * 0.3;
-			snd = out.dup;
+			snd = out.dup * -16.dbamp;
 			
 			Out.ar(delayOut,snd*delaySend);
 			Out.ar(reverbOut,snd*reverbSend);
@@ -161,7 +161,7 @@ Engine_Acid : CroneEngine {
 			env = Decay.ar(Impulse.ar(clapFrequency),1/clapFrequency,0.85,0.15)*Trig.ar(1,attack+0.001)+EnvGen.ar(Env.new(levels: [0.001, 0.001, 1,0.0001], times: [attack,0.001, decay],curve:\exponential),doneAction:2);
 			snd = Select.ar((mod2>0.5),[LPF.ar(snd,LinExp.kr(mod2,0,0.5,500,12000)),HPF.ar(snd,LinExp.kr(mod2,0.5,1,100,4000))]);
 
-			snd = snd * env * 0.3;
+			snd = snd * env * -16.dbamp;
 
 			Out.ar(delayOut,snd*delaySend);
 			Out.ar(reverbOut,snd*reverbSend);
@@ -202,7 +202,7 @@ Engine_Acid : CroneEngine {
 
 			out = noise + oscs1;
 			out = out.softclip;
-			out = out * amp;
+			out = out * amp * -20.dbamp;
 
 			snd = out.dup;
 
@@ -224,7 +224,7 @@ Engine_Acid : CroneEngine {
 			out = MoogLadder.ar(out, (pitch + env2/2).midicps+(LFNoise1.kr(0.2,1100,1500)),LFNoise1.kr(0.4,0.9).abs+0.3,3);
 			out = LeakDC.ar((out * env1).tanh/2.7);
 
-			snd = out.dup;
+			snd = out.dup * -16.dbamp;
 
 			Out.ar(delayOut,snd*delaySend);
 			Out.ar(reverbOut,snd*reverbSend);
@@ -245,7 +245,7 @@ Engine_Acid : CroneEngine {
 			out = MoogLadder.ar(out, 100+pitch.midicps + env2,LinExp.kr(SinOsc.kr(0.213),-1,1,0.01,0.2));
 			out = LeakDC.ar((out * env1).tanh);
 
-			snd = out.dup;
+			snd = out.dup * -14.dbamp;
 
 			Out.ar(delayOut,snd*delaySend);
 			Out.ar(reverbOut,snd*reverbSend);

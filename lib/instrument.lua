@@ -87,7 +87,18 @@ function Instrument:pulse(notes)
     end)
   elseif self.id=="chord" then
     -- play chords with the pad
-    for _,note in notes do
+    for i,note in ipairs(notes) do
+      note=note+24
+      if i>0 then
+        print(self.id,self.seq_amp0,
+          note,
+          mod1,
+          mod2,
+          params:get("acid_chord_attack"),
+          params:get("acid_chord_decay"),
+          params:get("acid_"..ins.."_delay"),
+        params:get("acid_"..ins.."_reverb"))
+      end
       engine.acid_chord(self.seq_amp0,
         note,
         mod1,

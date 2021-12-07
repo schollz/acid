@@ -38,7 +38,7 @@ end
 function init2()
   inited=true
 
-  song={root=36,scale="Major",notes={},chord_progression=s{"I"},measure_length=16,chord_current=""}
+  song={root=36,scale="Major",notes={},chord_progression=s{"vi","ii","IV","I"},measure_length=16,chord_current=""}
   song.measure_note=song.measure_length
 
   sequencer=lattice:new{
@@ -54,12 +54,12 @@ function init2()
       if song.measure_note>song.measure_length then
         song.measure_note=1
         song.chord_current=song.chord_progression()
-        song.notes={60,62,65} -- MusicUtil.generate_chord_roman(song.root,song.scale,song.chord_current)
+        song.notes=MusicUtil.generate_chord_roman(song.root,song.scale,song.chord_current)
         print("current chord: "..song.chord_current)
       end
 
       -- TODO: add chord to pulses
-      for _,ins in ipairs({"bass","lead","kick","snare","hat","clap","reverb"}) do
+      for _,ins in ipairs({"chord","bass","lead","kick","snare","clap","hat"}) do
         i_[ins]:pulse(song.notes)
       end
     end,
@@ -77,23 +77,21 @@ function init2()
 end
 
 function params_randomize_all()
+  params:set("acid_chord_n",8)
+  params:set("acid_chord_k",100/16)
+  params:set("acid_chord_attack",1)
+  params:set("acid_chord_decay",2)
+  for _,ins in ipairs({"kick","snare","hat","clap","reverb"}) do
+    params:set("acid_"..ins.."_n",math.random(6,8))
+    params:set("acid_"..ins.."_k",math.random(15,40))
+  end
   for _,ins in ipairs({"bass","lead"}) do
     i_[ins].seed=math.random(1,100)
     params:set("acid_"..ins.."_n",math.random(1,8))
     params:set("acid_"..ins.."_k",math.random(50,100))
-    -- if ins=="lead" then
-    --   params:set("acid_"..ins.."_w",math.random(0,3)*2+1)
-    -- else
-    --   params:set("acid_"..ins.."_w",math.random(0,3)*2)
-    -- end
     params:set("acid_"..ins.."_amp_1",12)
     params:set("acid_"..ins.."_amp_2",12)
     params:set("acid_"..ins.."_amp_3",4)
-    -- params:set("acid_"..ins.."_amp_4",12)
-    -- params:set("acid_"..ins.."_amp_5",12)
-    -- params:set("acid_"..ins.."_amp_6",4)
-    -- params:set("acid_"..ins.."_amp_7",12)
-    -- params:set("acid_"..ins.."_amp_8",12)
     for _,thing in ipairs({"note","duration"}) do
       params:set("acid_"..ins.."_"..thing,math.random(1,8))
       for i=1,8 do
@@ -211,17 +209,17 @@ function params_init()
   end
 
   -- insert the parameters
+  local instruments={"chord","bass","lead"}
+  for _,ins in ipairs(instruments) do
+    i_[ins]=instrument_:new({id=ins})
+    shared_parms(ins)
+  end
   for _,ins in ipairs(percussion) do
     i_[ins]=instrument_:new({id=ins})
     shared_parms(ins)
     for _,erthing in ipairs({"n","k","w"}) do
       params:set("acid_"..ins.."_"..erthing,percussion_defaults[ins][erthing])
     end
-  end
-  local instruments={"bass","lead"}
-  for _,ins in ipairs(instruments) do
-    i_[ins]=instrument_:new({id=ins})
-    shared_parms(ins)
   end
 
   -- effects
