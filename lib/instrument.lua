@@ -50,6 +50,14 @@ function Instrument:pulse(notes)
   if not self.seq_gate0 then
     do return end
   end
+  local ins=self.id
+  local mod1=0.5
+  local mod2=0.5
+  if ins~="reverb" then
+    mod1=params:get("acid_"..ins.."_mod1")/100
+    mod2=params:get("acid_"..ins.."_mod2")/100
+  end
+
   self.seq_duration0=self.seq_duration()
   self.seq_note0=self.seq_note()
   self.seq_amp0=self.seq_amp()*self.amp_scale
@@ -59,11 +67,17 @@ function Instrument:pulse(notes)
       note=note+12
     end
     --print(self.id,self.seq_gate0,self.seq_amp0,note,self.seq_duration0)
+    print(ins,self.seq_amp0,
+      note,
+      mod1,
+      mod2,
+      params:get("acid_"..ins.."_delay"),
+    params:get("acid_"..ins.."_reverb"))
     engine["acid_"..self.id](
       self.seq_amp0,
       note,
-      params:get("acid_"..ins.."_mod1"),
-      params:get("acid_"..ins.."_mod2"),
+      mod1,
+      mod2,
       params:get("acid_"..ins.."_delay"),
     params:get("acid_"..ins.."_reverb"))
     engine["acid_"..self.id.."_gate"](1)
@@ -76,8 +90,8 @@ function Instrument:pulse(notes)
     for _,note in notes do
       engine.acid_chord(self.seq_amp0,
         note,
-        params:get("acid_"..ins.."_mod1"),
-        params:get("acid_"..ins.."_mod2"),
+        mod1,
+        mod2,
         params:get("acid_chord_attack"),
         params:get("acid_chord_decay"),
         params:get("acid_"..ins.."_delay"),
@@ -88,8 +102,8 @@ function Instrument:pulse(notes)
   elseif self.id=="kick" or self.id=="snare" or self.id=="hat" or self.id=="clap" then
     engine.acid_drum(self.id,
       self.seq_amp0,
-      params:get("acid_"..ins.."_mod1"),
-      params:get("acid_"..ins.."_mod2"),
+      mod1,
+      mod2,
       params:get("acid_"..ins.."_delay"),
     params:get("acid_"..ins.."_reverb"))
   end

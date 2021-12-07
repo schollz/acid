@@ -54,7 +54,7 @@ function init2()
       if song.measure_note>song.measure_length then
         song.measure_note=1
         song.chord_current=song.chord_progression()
-        song.notes=MusicUtil.generate_chord_roman(song.root,song.scale,song.chord_current)
+        song.notes={60,62,65} -- MusicUtil.generate_chord_roman(song.root,song.scale,song.chord_current)
         print("current chord: "..song.chord_current)
       end
 
