@@ -18,8 +18,6 @@ function Instrument:init()
   self.n=self.n or 16
   self.k=self.k or 1
   self.w=self.w or 0
-  self.reverb_send=0
-  self.delay_send=0
   self.num_def={1,2,3,4,6,10,12,16}
   self.note_num=1
   self.note_def=self.note_def or {-12,-7,-5,0,5,7,14,17}
@@ -56,34 +54,45 @@ function Instrument:pulse(notes)
   self.seq_note0=self.seq_note()
   self.seq_amp0=self.seq_amp()*self.amp_scale
   if self.id=="bass" or self.id=="lead" then
-    local note=self.seq_note0+song.root
+    local note=self.seq_note0+notes[1]
     if self.id=="lead" then
       note=note+12
     end
     --print(self.id,self.seq_gate0,self.seq_amp0,note,self.seq_duration0)
-    engine["acid_"..self.id](self.seq_amp0,note,self.delay_send,self.reverb_send)
+    engine["acid_"..self.id](
+      self.seq_amp0,
+      note,
+      params:get("acid_"..ins.."_mod1"),
+      params:get("acid_"..ins.."_mod2"),
+      params:get("acid_"..ins.."_delay"),
+    params:get("acid_"..ins.."_reverb"))
     engine["acid_"..self.id.."_gate"](1)
     clock.run(function()
       clock.sleep(clock.get_beat_sec()/16*self.seq_duration0)
       engine["acid_"..self.id.."_gate"](0)
     end)
   elseif self.id=="chord" then
-    -- TODO: play chords with the pad
+    -- play chords with the pad
+    for _,note in notes do
+      engine.acid_chord(self.seq_amp0,
+        note,
+        params:get("acid_"..ins.."_mod1"),
+        params:get("acid_"..ins.."_mod2"),
+        params:get("acid_chord_attack"),
+        params:get("acid_chord_decay"),
+        params:get("acid_"..ins.."_delay"),
+      params:get("acid_"..ins.."_reverb"))
+    end
   elseif self.id=="reverb" then
     engine.acid_reverb(1,params:get("acid_reverb_attack"),params:get("acid_reverb_decay"))
   elseif self.id=="kick" or self.id=="snare" or self.id=="hat" or self.id=="clap" then
-    print(self.id,self.seq_amp0,self.delay_send,self.reverb_send)
-    engine.acid_drum(self.id,self.seq_amp0,self.delay_send,self.reverb_send)
-    -- TODO: make reverb its own instrument
+    engine.acid_drum(self.id,
+      self.seq_amp0,
+      params:get("acid_"..ins.."_mod1"),
+      params:get("acid_"..ins.."_mod2"),
+      params:get("acid_"..ins.."_delay"),
+    params:get("acid_"..ins.."_reverb"))
   end
-end
-
---
--- fx
---
-function Instrument:set_fx(fx_name,v)
-  print(fx_name.."_send")
-  self[fx_name.."_send"]=v
 end
 
 --

@@ -205,9 +205,6 @@ function params_init()
     for _,fxname in ipairs({"delay","reverb"}) do
       local k="acid_"..ins.."_"..fxname
       params:add_control(k,fxname.." send",control0_100p)
-      params:set_action(k,function(v)
-        i_[ins]:set_fx(fxname,v/100)
-      end)
       params:set(k,0)
     end
 
