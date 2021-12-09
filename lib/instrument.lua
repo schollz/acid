@@ -62,7 +62,7 @@ function Instrument:pulse(notes)
   self.seq_note0=self.seq_note()
   self.seq_amp0=self.seq_amp()*self.amp_scale
   if self.id=="bass" or self.id=="lead" then
-    local note=self.seq_note0+notes[1]
+    local note=self.seq_note0+song.root -- +notes[1]
     if self.id=="lead" then
       note=note+12
     end

@@ -38,7 +38,7 @@ end
 function init2()
   inited=true
 
-  song={root=36,scale="Major",notes={},chord_progression=s{"vi","ii","IV","I"},measure_length=16,chord_current=""}
+  song={root=36,scale="Major",notes={},chord_progression=s{"vi","ii","IV","I"},measure_length=64,chord_current=""}
   song.measure_note=song.measure_length
 
   sequencer=lattice:new{
@@ -59,10 +59,11 @@ function init2()
       end
 
       -- TODO: add chord to pulses
-      for _,ins in ipairs({"chord","bass","lead","kick","snare","clap","hat"}) do
+      for _,ins in ipairs({"chord","bass","lead","kick","snare","clap","hat","reverb"}) do
         i_[ins]:pulse(song.notes)
       end
     end,
+    swing=60,
     division=1/16
   })
 
@@ -70,6 +71,7 @@ function init2()
   engine.acid_delay(clock.get_beat_sec()/8,2,0.015)
 
   -- <debug>
+  params:set("clock_tempo",130)
   params_randomize_all()
   -- </debug>
 
@@ -81,6 +83,9 @@ function params_randomize_all()
   params:set("acid_chord_k",100/16)
   params:set("acid_chord_attack",1)
   params:set("acid_chord_decay",2)
+  for _,ins in ipairs({"kick","snare","hat","clap"}) do
+    params:set("acid_"..ins.."_reverb",20)
+  end
   for _,ins in ipairs({"kick","snare","hat","clap","reverb"}) do
     params:set("acid_"..ins.."_n",math.random(6,8))
     params:set("acid_"..ins.."_k",math.random(15,40))
