@@ -35,6 +35,8 @@ Engine_Acid : CroneEngine {
 			// reverb
 			snd2 = In.ar(inReverb,2);
 			snd2=FreeVerb2.ar( BPF.ar(snd2[0], 3500, 1.5), BPF.ar(snd2[1], 3500, 1.5), 1.0, 0.95, 0.15 );
+			snd2=Limiter.ar(snd2, 0.95, 0.02);
+			snd2=snd2*0.5;
 			// another kind of reverb
 			// snd2 = DelayN.ar(snd2, 0.03, 0.03);
 			// snd2 = CombN.ar(snd2, 0.1, {Rand(0.01,0.099)}!32, 4);
@@ -239,10 +241,10 @@ Engine_Acid : CroneEngine {
 			var env1, env2, out, snd;
 			pitch = Lag.kr(pitch, 0.12 * (1-Trig.kr(gate, 0.001)) * gate);
 			env1 = EnvGen.ar(Env.perc(0.01,0.7,4,-4), gate, amp);
-			env2 = EnvGen.ar(Env.perc(0.001,0.3,600*SinOsc.kr(0.123).range(0.5,4),-3), gate);
+			env2 = EnvGen.ar(Env.perc(0.001,0.3,600,-3), gate);
 			out = LFPulse.ar(pitch.midicps, 0, 0.5);
 
-			out = MoogLadder.ar(out, 100+pitch.midicps + env2,LinExp.kr(SinOsc.kr(0.213),-1,1,0.01,0.2));
+			out = MoogLadder.ar(out, 100+pitch.midicps + env2,0.2);
 			out = LeakDC.ar((out * env1).tanh);
 
 			snd = out.dup * -14.dbamp;

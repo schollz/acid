@@ -59,7 +59,8 @@ function init2()
       end
 
       -- TODO: add chord to pulses
-      for _,ins in ipairs({"chord","bass","lead","kick","snare","clap","hat","reverb"}) do
+      -- for _,ins in ipairs({"chord","bass","lead","kick","snare","clap","hat","reverb"}) do
+      for _,ins in ipairs({"chord","bass","kick","reverb"}) do
         i_[ins]:pulse(song.notes)
       end
     end,
@@ -79,12 +80,8 @@ function init2()
 end
 
 function params_randomize_all()
-  params:set("acid_chord_n",8)
-  params:set("acid_chord_k",100/16)
-  params:set("acid_chord_attack",1)
-  params:set("acid_chord_decay",2)
   for _,ins in ipairs({"kick","snare","hat","clap"}) do
-    params:set("acid_"..ins.."_reverb",20)
+    params:set("acid_"..ins.."_reverb",5)
   end
   for _,ins in ipairs({"kick","snare","hat","clap","reverb"}) do
     params:set("acid_"..ins.."_n",math.random(6,8))
@@ -98,14 +95,32 @@ function params_randomize_all()
     params:set("acid_"..ins.."_amp_2",12)
     params:set("acid_"..ins.."_amp_3",4)
     for _,thing in ipairs({"note","duration"}) do
-      params:set("acid_"..ins.."_"..thing,math.random(1,8))
+      params:set("acid_"..ins.."_"..thing,8)
       for i=1,8 do
         local k="acid_"..ins.."_"..thing.."_"..i
-        params:set(k,math.random(1,8))
+        params:set(k,math.random(1,15))
       end
     end
     i_[ins]:randomize_all()
   end
+  params:set("acid_bass_n",8)
+  params:set("acid_bass_k",100)
+  params:set("acid_bass_reverb",5)
+  params:set("acid_chord_reverb",5)
+
+  params:set("acid_reverb_n",8)
+  params:set("acid_reverb_k",25)
+  params:set("acid_reverb_attack",0.1)
+  params:set("acid_reverb_decay",0.5)
+
+  params:set("acid_chord_n",8)
+  params:set("acid_chord_k",100/16/4)
+  params:set("acid_chord_attack",clock.get_beat_sec()*4)
+  params:set("acid_chord_decay",0.1)
+
+  params:set("acid_kick_n",8)
+  params:set("acid_kick_k",0)
+  params:set("acid_kick_reverb",0)
 end
 
 function params_randomize()
@@ -173,9 +188,6 @@ function params_init()
     for i=1,2 do
       local k="acid_"..ins.."_mod"..i
       params:add_control(k,"mod "..i,control0_100p)
-      params:set_action(k,function(p)
-        i_[ins]:set_mod(i,p/100)
-      end)
       params:set(k,50)
     end
 

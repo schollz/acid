@@ -62,7 +62,9 @@ function Instrument:pulse(notes)
   self.seq_note0=self.seq_note()
   self.seq_amp0=self.seq_amp()*self.amp_scale
   if self.id=="bass" or self.id=="lead" then
-    local note=self.seq_note0+song.root -- +notes[1]
+    table.sort(notes)
+    -- local note=self.seq_note0+song.root -- +notes[1]
+    local note=self.seq_note0+notes[1]
     if self.id=="lead" then
       note=note+12
     end
@@ -88,7 +90,13 @@ function Instrument:pulse(notes)
   elseif self.id=="chord" then
     -- play chords with the pad
     for i,note in ipairs(notes) do
-      note=note+24
+      note=note+12
+      if math.random()<0.2 then
+        note=note-12
+      end
+      if math.random()<0.2 then
+        note=note+12
+      end
       if i>0 then
         print(self.id,self.seq_amp0,
           note,
@@ -109,6 +117,7 @@ function Instrument:pulse(notes)
       params:get("acid_"..ins.."_reverb"))
     end
   elseif self.id=="reverb" then
+    print(self.id,1,params:get("acid_reverb_attack"),params:get("acid_reverb_decay"))
     engine.acid_reverb(1,params:get("acid_reverb_attack"),params:get("acid_reverb_decay"))
   elseif self.id=="kick" or self.id=="snare" or self.id=="hat" or self.id=="clap" then
     engine.acid_drum(self.id,
