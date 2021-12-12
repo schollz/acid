@@ -63,18 +63,21 @@ function Instrument:pulse(notes)
   self.seq_amp0=self.seq_amp()*self.amp_scale
   if self.id=="bass" or self.id=="lead" then
     table.sort(notes)
+    if self.seq_duration0==0 or self.seq_amp0==0 then
+      do return end
+    end
     -- local note=self.seq_note0+song.root -- +notes[1]
     local note=self.seq_note0+notes[1]
     if self.id=="lead" then
       note=note+12
     end
-    --print(self.id,self.seq_gate0,self.seq_amp0,note,self.seq_duration0)
-    -- print(ins,self.seq_amp0,
-    --   note,
-    --   mod1,
-    --   mod2,
-    --   params:get("acid_"..ins.."_delay"),
-    -- params:get("acid_"..ins.."_reverb"))
+    print(self.id,self.seq_gate0,self.seq_amp0,note,self.seq_duration0)
+    print(ins,self.seq_amp0,
+      note,
+      mod1,
+      mod2,
+      params:get("acid_"..ins.."_delay"),
+    params:get("acid_"..ins.."_reverb"))
     engine["acid_"..self.id](
       self.seq_amp0,
       note,
@@ -97,16 +100,16 @@ function Instrument:pulse(notes)
       if math.random()<0.2 then
         note=note+12
       end
-      -- if i>0 then
-      --   print(self.id,self.seq_amp0,
-      --     note,
-      --     mod1,
-      --     mod2,
-      --     params:get("acid_chord_attack"),
-      --     params:get("acid_chord_decay"),
-      --     params:get("acid_"..ins.."_delay"),
-      --   params:get("acid_"..ins.."_reverb"))
-      -- end
+      if i>0 then
+        print(self.id,self.seq_amp0,
+          note,
+          mod1,
+          mod2,
+          params:get("acid_chord_attack"),
+          params:get("acid_chord_decay"),
+          params:get("acid_"..ins.."_delay"),
+        params:get("acid_"..ins.."_reverb"))
+      end
       engine.acid_chord(self.seq_amp0,
         note,
         mod1,
