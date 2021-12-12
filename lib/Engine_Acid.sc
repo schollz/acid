@@ -244,7 +244,7 @@ Engine_Acid : CroneEngine {
 			env2 = EnvGen.ar(Env.perc(0.001,0.3,600,-3), gate);
 			out = LFPulse.ar(pitch.midicps, 0, 0.5);
 
-			out = MoogLadder.ar(out, 100+pitch.midicps + env2,0.2);
+			out = MoogLadder.ar(out, (100+pitch.midicps + env2)*LinExp.kr(mod1,0,1,0.1,10),0.01+(0.4*mod2));
 			out = LeakDC.ar((out * env1).tanh);
 
 			snd = out.dup * -14.dbamp;
