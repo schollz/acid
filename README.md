@@ -15,9 +15,10 @@
 
 1. n
 2. k
-3. amp seqeunce
+3, w
 4. mod1
 5. mod2
+3. amp seqeunce
 
 ## chord
  

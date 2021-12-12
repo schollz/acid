@@ -1,8 +1,6 @@
 -- local pattern_time = require("pattern")
 local Grid_={}
 
-local PAGE_MIXER=1
-local PAGE_BASS=2
 local INSTRUMENTS={
   "chord",
   "lead",
@@ -36,7 +34,7 @@ function Grid_:new(args)
       m.visual[i][j]=0
     end
   end
-  m.page=PAGE_MIXER
+  m.page=0
 
   -- keep track of pressed buttons
   m.pressed_buttons={}
@@ -59,7 +57,55 @@ function Grid_:new(args)
     end
   end
 
+  m:init()
+
   return m
+end
+
+function Grid_:init()
+  -- define functions for pressing keys
+  self.press_fn={}
+  self.press_fn[PAGE_MIXER]=function(row,col)
+    for i,ins in ipairs(INSTRUMENTS) do
+      if row==i then
+        local name="acid_"..ins.."_amp_scale"
+        local b=param_to_binary(name,7)
+        local index=8-row -- 1-7
+        b[index]=1-b[index]
+        param_set_from_binary(name,b)
+      end
+    end
+  end
+  self.press_fn[PAGE_BASS]=function(row,col)
+    local ins="bass"
+    if row<=4 then
+      local names={"n","k","mod1","mod2"}
+      local name="acid_"..ins.."_"..names[row]
+      local b=param_to_binary(name,8)
+      b[col]=1-b[col]
+      param_set_from_binary(name,b)
+    else
+      local names={"note","duration","amp"}
+      local name="acid_"..ins.."_"..names[row].."_"..col
+      params:delta(name,1)
+    end
+  end
+  for i=4,8 do
+    self.press_fn[i]=function(row,col)
+      local ins=INSTRUMENTS[self.page]
+      if row<=5 then
+        local names={"n","k","w","mod1","mod2"}
+        local name="acid_"..ins.."_"..names[row]
+        local b=param_to_binary(name,8)
+        b[col]=1-b[col]
+        param_set_from_binary(name,b)
+      elseif row<=6 then
+        local names={"amp"}
+        local name="acid_"..ins.."_"..names[row].."_"..col
+        params:delta(name,1)
+      end
+    end
+  end
 end
 
 function Grid_:grid_key(x,y,z)
@@ -83,51 +129,17 @@ function Grid_:key_press(row,col,on)
   -- navigation on every page
   if row==8 then
     if on then
-      self.page=col
+      if col==self.page then
+        self.page=0
+      else
+        self.page=col
+      end
     end
     do return end
   end
 
-  -- define functions for pressing keys
-  local press={}
-  press[PAGE_MIXER]=self:key_press_mixer
-  press[PAGE_BASS]=self:key_press_bass
   if on then
-    press[self.page](row,col)
-  end
-end
-
-function Grid_:key_press_mixer(row,col)
-  for i,ins in ipairs(INSTRUMENTS) do
-    if row==i then
-      local name="acid_"..ins.."_amp_scale"
-      local b=param_to_binary(name,7)
-      local index=8-row -- 1-7
-      b[index]=1-b[index]
-      param_set_from_binary(name,b)
-    end
-  end
-end
-
-function Grid_:key_press_bass(row,col)
-  -- 1. n
-  -- 2. k {0,12.5,25,33.3,50,66.6,75,100}
-  -- 3. mod1
-  -- 4. mod2
-  -- 5. note {-12,-7,-5,0,5,7,14,17}
-  -- 6. duration {0.05,0.1,0.25,0.5,1,2,4,8}
-  -- 7. amp seqeunce
-  local ins="bass"
-  if row<=4 then
-    local names={"n","k","mod1","mod2"}
-    local name="acid_"..ins.."_"..names[row]
-    local b=param_to_binary(name,8)
-    b[col]=1-b[col]
-    param_set_from_binary(name,b)
-  else
-    local names={"note","duration","amp"}
-    local name="acid_"..ins.."_"..names[row].."_"..col
-    params:delta(name,1)
+    self.press_fn[self.page](row,col)
   end
 end
 
@@ -143,7 +155,8 @@ function Grid_:get_visual()
   end
 
   -- illuminate the page
-  if self.page==PAGE_MIXER then
+  if self.page==0 then
+    -- MIXER
     for col,ins in ipairs(INSTRUMENTS) do
       local name="acid_"..ins.."_amp_scale"
       local b=param_to_binary(name,7)
@@ -154,7 +167,7 @@ function Grid_:get_visual()
         end
       end
     end
-  elseif self.page==PAGE_BASS then
+  elseif self.page==3 then
     local ins="bass"
     local names={"n","k","mod1","mod2","note","duration","amp"}
     for i,name in ipairs(names) do
@@ -170,8 +183,26 @@ function Grid_:get_visual()
         end
       end
     end
+  elseif self.page>=4 then
+    local ins=INSTRUMENTS[self.page]
+    local names={"n","k","w","mod1","mod2","amp"}
+    for i,name in ipairs(names) do
+      name="acid_"..ins.."_"..name
+      if i<=4 then
+        local b=param_to_binary(name,8)
+        for col,v in ipairs(b) do
+          self.visual[row][col]=v*15
+        end
+      else
+        for col=1,8 do
+          self.visual[row][col]=params:get(name.."_"..col)
+        end
+      end
+    end
   end
-  self.visual[8][self.page]=15
+  if self.page>0 then
+    self.visual[8][self.page]=15
+  end
 
   -- illuminate currently pressed button
   for _,v in ipairs(self.pressed_buttons) do

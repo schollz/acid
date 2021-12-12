@@ -12,7 +12,7 @@
 include("acid/lib/utils")
 s=require("sequins")
 er=require("er")
---grid__=include("acid/lib/grid_")
+grid__=include("acid/lib/grid_")
 MusicUtil=require "musicutil"
 lattice=require("lattice")
 instrument_=include("acid/lib/instrument")

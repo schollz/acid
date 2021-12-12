@@ -47,12 +47,12 @@ function binary.decode(t)
   return math.floor(num)
 end
 
-for _,v in ipairs({12,99,1,32,127}) do
-  print(v)
-  local t=binary.encode(v)
-  table.print(t)
-  print("num=",binary.decode(t))
-end
+-- for _,v in ipairs({12,99,1,32,127}) do
+--   print(v)
+--   local t=binary.encode(v)
+--   table.print(t)
+--   print("num=",binary.decode(t))
+-- end
 
 function param_to_binary(name,bits)
   local t={}
