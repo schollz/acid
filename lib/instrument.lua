@@ -69,12 +69,12 @@ function Instrument:pulse(notes)
       note=note+12
     end
     --print(self.id,self.seq_gate0,self.seq_amp0,note,self.seq_duration0)
-    print(ins,self.seq_amp0,
-      note,
-      mod1,
-      mod2,
-      params:get("acid_"..ins.."_delay"),
-    params:get("acid_"..ins.."_reverb"))
+    -- print(ins,self.seq_amp0,
+    --   note,
+    --   mod1,
+    --   mod2,
+    --   params:get("acid_"..ins.."_delay"),
+    -- params:get("acid_"..ins.."_reverb"))
     engine["acid_"..self.id](
       self.seq_amp0,
       note,
@@ -97,16 +97,16 @@ function Instrument:pulse(notes)
       if math.random()<0.2 then
         note=note+12
       end
-      if i>0 then
-        print(self.id,self.seq_amp0,
-          note,
-          mod1,
-          mod2,
-          params:get("acid_chord_attack"),
-          params:get("acid_chord_decay"),
-          params:get("acid_"..ins.."_delay"),
-        params:get("acid_"..ins.."_reverb"))
-      end
+      -- if i>0 then
+      --   print(self.id,self.seq_amp0,
+      --     note,
+      --     mod1,
+      --     mod2,
+      --     params:get("acid_chord_attack"),
+      --     params:get("acid_chord_decay"),
+      --     params:get("acid_"..ins.."_delay"),
+      --   params:get("acid_"..ins.."_reverb"))
+      -- end
       engine.acid_chord(self.seq_amp0,
         note,
         mod1,
@@ -117,7 +117,7 @@ function Instrument:pulse(notes)
       params:get("acid_"..ins.."_reverb"))
     end
   elseif self.id=="reverb" then
-    print(self.id,1,params:get("acid_reverb_attack"),params:get("acid_reverb_decay"))
+    -- print(self.id,1,params:get("acid_reverb_attack"),params:get("acid_reverb_decay"))
     engine.acid_reverb(1,params:get("acid_reverb_attack"),params:get("acid_reverb_decay"))
   elseif self.id=="kick" or self.id=="snare" or self.id=="hat" or self.id=="clap" then
     engine.acid_drum(self.id,
@@ -133,8 +133,8 @@ end
 -- amp
 --
 
-function Instrument:set_amp_scale(i)
-  self.amp_scale=self.amp_scale_def[i]
+function Instrument:set_amp_scale(v)
+  self.amp_scale=v
 end
 
 function Instrument:set_amp(i,v)

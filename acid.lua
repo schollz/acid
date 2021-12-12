@@ -165,10 +165,9 @@ function params_init()
   local shared_parms=function(ins)
     params:add_separator(ins)
     -- mixer volume
-    params:add_control("acid_"..ins.."_amp_scale","amp scale",control1_7)
+    params:add_control("acid_"..ins.."_amp_scale","amp scale",control0_100p)
     params:set_action("acid_"..ins.."_amp_scale",function(n)
-      print("setting amp scale",ins,n)
-      i_[ins]:set_amp_scale(n)
+      i_[ins]:set_amp(n/100)
     end)
 
     knw(ins)
