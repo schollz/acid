@@ -223,7 +223,7 @@ Engine_Acid : CroneEngine {
 			env2 = EnvGen.ar(Env.adsr(0.001, 0.8, 0, 0.8, 70, -4), gate);
 			out = LFSaw.ar(pitch.midicps, 2, -1);
 
-			out = MoogLadder.ar(out, (pitch + env2/2).midicps+(LFNoise1.kr(0.2,1100,1500)),LFNoise1.kr(0.4,0.9).abs+0.3,3);
+			out = MoogLadder.ar(out, ((pitch + env2/2).midicps+(LFNoise1.kr(0.2,1100,1500)))*LinExp.kr(mod1,0,1,0.1,10),(LFNoise1.kr(0.4,0.9).abs+0.3)*LinLin.kr(mod2,0,1,0.1,1.9),3);
 			out = LeakDC.ar((out * env1).tanh/2.7);
 
 			snd = out.dup * -16.dbamp;
