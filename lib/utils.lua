@@ -53,3 +53,28 @@ for _,v in ipairs({12,99,1,32,127}) do
   table.print(t)
   print("num=",binary.decode(t))
 end
+
+function param_to_binary(name,bits)
+  local t={}
+  for i=1,bits do
+    table.insert(t,1)
+  end
+  local val_max=binary.decode(t)
+  local num_binary=util.linlin(self.params[name].min,self.params[name].max,0,val_max,params:get(name))
+  local b=binary.encode(num_binary)
+  while #b<bits do
+    table.insert(b,0)
+  end
+  return b
+end
+
+function param_set_from_binary(name,t)
+  local tmax={}
+  for i,_ in ipairs(t) do
+    table.insert(tmax,1)
+  end
+  local val_max=binary.decde(tmax)
+  local num_binary=binary.decode(t)
+  local val=util.linlin(0,tmax,self.params[name].min,self.params[name].max,num_binary)
+  params:set(name,val)
+end

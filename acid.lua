@@ -136,7 +136,8 @@ function params_init()
   local control1_7=controlspec.new(1,7,'lin',1,1,'',1/7,true)
   local control0_7=controlspec.new(0,7,'lin',1,0,'',1/8,true)
   local control0_15=controlspec.new(0,15,'lin',1,0,'',1/16,true)
-  local control0_100p=controlspec.new(0,100,'lin',1,50,'%',1/100,true)
+  local control0_100p=controlspec.new(0,100,'lin',1,50,'%',1/101,true)
+  local control0_255=controlspec.new(0,255,'lin',1,32,'',1/256,true)
   local control_small_time=controlspec.new(0,1,'lin',0.01,0.1,'s',0.01/1)
   local percussion={"kick","snare","clap","hat"}
   local percussion_defaults={
@@ -147,9 +148,9 @@ function params_init()
   }
   local knw=function(ins)
     -- er "n"
-    params:add_control("acid_"..ins.."_n","n",control1_8)
+    params:add_control("acid_"..ins.."_n","n",control0_255)
     params:set_action("acid_"..ins.."_n",function(n)
-      i_[ins]:set_n_index(n)
+      i_[ins]:set_n(n)
     end)
     -- er "k"
     params:add_control("acid_"..ins.."_k","k",control0_100p)

@@ -91,6 +91,7 @@ function Grid_:key_press(row,col,on)
   -- define functions for pressing keys
   local press={}
   press[PAGE_MIXER]=self:key_press_mixer
+  press[PAGE_BASS]=self:key_press_bass
   if on then
     press[self.page](row,col)
   end
@@ -103,34 +104,31 @@ function Grid_:key_press_mixer(row,col)
       local b=param_to_binary(name,7)
       local index=8-row -- 1-7
       b[index]=1-b[index]
-      self:param_set_from_binary(name,b)
+      param_set_from_binary(name,b)
     end
   end
 end
 
-function Grid_:param_to_binary(name,bits)
-  local t={}
-  for i=1,bits do
-    table.insert(t,1)
+function Grid_:key_press_bass(row,col)
+  -- 1. n
+  -- 2. k {0,12.5,25,33.3,50,66.6,75,100}
+  -- 3. mod1
+  -- 4. mod2
+  -- 5. note {-12,-7,-5,0,5,7,14,17}
+  -- 6. duration {0.05,0.1,0.25,0.5,1,2,4,8}
+  -- 7. amp seqeunce
+  local ins="bass"
+  if row<=4 then
+    local names={"n","k","mod1","mod2"}
+    local name="acid_"..ins.."_"..names[row]
+    local b=param_to_binary(name,8)
+    b[col]=1-b[col]
+    param_set_from_binary(name,b)
+  else
+    local names={"note","duration","amp"}
+    local name="acid_"..ins.."_"..names[row].."_"..col
+    params:delta(name,1)
   end
-  local val_max=binary.decode(t)
-  local num_binary=util.linlin(self.params[name].min,self.params[name].max,0,val_max,params:get(name))
-  local b=binary.encode(num_binary)
-  while #b<bits do
-    table.insert(b,0)
-  end
-  return b
-end
-
-function Grid_:param_set_from_binary(name,t)
-  local tmax={}
-  for i,_ in ipairs(t) do
-    table.insert(tmax,1)
-  end
-  local val_max=binary.decde(tmax)
-  local num_binary=binary.decode(t)
-  local val=util.linlin(0,tmax,self.params[name].min,self.params[name].max,num_binary)
-  params:set(name,val)
 end
 
 function Grid_:get_visual()
@@ -148,7 +146,7 @@ function Grid_:get_visual()
   if self.page==PAGE_MIXER then
     for col,ins in ipairs(INSTRUMENTS) do
       local name="acid_"..ins.."_amp_scale"
-      local b=self:param_to_binary(name,7)
+      local b=param_to_binary(name,7)
       for i,v in ipairs(b) do
         if v>0 then
           local row=8-i
@@ -157,7 +155,21 @@ function Grid_:get_visual()
       end
     end
   elseif self.page==PAGE_BASS then
-
+    local ins="bass"
+    local names={"n","k","mod1","mod2","note","duration","amp"}
+    for i,name in ipairs(names) do
+      name="acid_"..ins.."_"..name
+      if i<=4 then
+        local b=param_to_binary(name,8)
+        for col,v in ipairs(b) do
+          self.visual[row][col]=v*15
+        end
+      else
+        for col=1,8 do
+          self.visual[row][col]=params:get(name.."_"..col)
+        end
+      end
+    end
   end
   self.visual[8][self.page]=15
 
