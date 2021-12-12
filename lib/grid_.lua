@@ -76,18 +76,33 @@ function Grid_:init()
       end
     end
   end
-  self.press_fn[PAGE_BASS]=function(row,col)
-    local ins="bass"
-    if row<=4 then
-      local names={"n","k","mod1","mod2"}
+  self.press_fn[1]=function(row,col)
+    local ins=INSTRUMENTS[self.page]
+    if row<=2 then
+      local names={"mod1","mod2"}
       local name="acid_"..ins.."_"..names[row]
       local b=param_to_binary(name,8)
       b[col]=1-b[col]
       param_set_from_binary(name,b)
-    else
-      local names={"note","duration","amp"}
-      local name="acid_"..ins.."_"..names[row].."_"..col
-      params:delta(name,1)
+    elseif row>=4 then
+      local name="acid_chord_"..(row-3)
+      params:set(name,col)
+    end
+  end
+  for i=2,3 do
+    self.press_fn[i]=function(row,col)
+      local ins=INSTRUMENTS[self.page]
+      if row<=4 then
+        local names={"n","k","mod1","mod2"}
+        local name="acid_"..ins.."_"..names[row]
+        local b=param_to_binary(name,8)
+        b[col]=1-b[col]
+        param_set_from_binary(name,b)
+      else
+        local names={"note","duration","amp"}
+        local name="acid_"..ins.."_"..names[row].."_"..col
+        params:delta(name,1)
+      end
     end
   end
   for i=4,8 do
@@ -115,7 +130,7 @@ end
 
 function Grid_:key_press(row,col,on)
   if on then
-    table.insert(self.pressed_buttons,{row=row,col=col,time=clock.get_beats()*clock.get_beat_sec()})
+    table.insert(self.pressed_buttons,{row=row,col=col,time=clock.get_beats()*clock.get_beat_sec(),filled=false})
   else
     local did_remove=false
     for i,v in ipairs(self.pressed_buttons) do
@@ -144,6 +159,8 @@ function Grid_:key_press(row,col,on)
 end
 
 function Grid_:get_visual()
+  local ct=clock.get_beats()*clock.get_beat_sec()
+
   -- clear visual
   for row=1,8 do
     for col=1,self.grid_width do
@@ -155,6 +172,7 @@ function Grid_:get_visual()
   end
 
   -- illuminate the page
+  local ins=INSTRUMENTS[self.page]
   if self.page==0 then
     -- MIXER
     for col,ins in ipairs(INSTRUMENTS) do
@@ -167,12 +185,32 @@ function Grid_:get_visual()
         end
       end
     end
-  elseif self.page==3 then
-    local ins="bass"
-    local names={"n","k","mod1","mod2","note","duration","amp"}
-    for i,name in ipairs(names) do
+  elseif self.page==1 then
+    -- CHORDS
+    local names={"mod1","mod2","","1","2","3","4"}
+    for row,name in ipairs(names) do
       name="acid_"..ins.."_"..name
-      if i<=4 then
+      if row<=2 then
+        local b=param_to_binary(name,8)
+        for col,v in ipairs(b) do
+          self.visual[row][col]=v*15
+        end
+      elseif row>=4 then
+        -- highlight each row
+        if song.chord_progression.ix==row-3 then
+          for col=1,8 do
+            self.visual[row][col]=7
+          end
+        end
+        local col=params:get(name)
+        self.visual[row][col]=15
+      end
+    end
+  elseif self.page<=3 then
+    local names={"n","k","mod1","mod2","note","duration","amp"}
+    for row,name in ipairs(names) do
+      name="acid_"..ins.."_"..name
+      if row<=4 then
         local b=param_to_binary(name,8)
         for col,v in ipairs(b) do
           self.visual[row][col]=v*15
@@ -184,11 +222,10 @@ function Grid_:get_visual()
       end
     end
   elseif self.page>=4 then
-    local ins=INSTRUMENTS[self.page]
     local names={"n","k","w","mod1","mod2","amp"}
-    for i,name in ipairs(names) do
+    for row,name in ipairs(names) do
       name="acid_"..ins.."_"..name
-      if i<=4 then
+      if row<=4 then
         local b=param_to_binary(name,8)
         for col,v in ipairs(b) do
           self.visual[row][col]=v*15
@@ -205,7 +242,27 @@ function Grid_:get_visual()
   end
 
   -- illuminate currently pressed button
-  for _,v in ipairs(self.pressed_buttons) do
+  for i,v in ipairs(self.pressed_buttons) do
+    if not v.filled and v.row<8 then
+      -- illuminate the halo
+      local dt=v.time-ct
+      local spread=2*dt
+      local row_min=util.clamp(util.round(v.row-spread),1,8)
+      local row_max=util.clamp(util.round(v.row+spread),1,8)
+      local col_min=util.clamp(util.round(v.col-spread),1,8)
+      local col_max=util.clamp(util.round(v.col+spread),1,8)
+      for row=row_min,row_max do
+        for col=col_min,col_max do
+          local dist=math.sqrt((row-v.row)^2+(col-v.col)^2)
+          self.visual[row][col]=math.floor(15-dist)
+        end
+      end
+      self.pressed_buttons[i].filled=(row_min==1 and col_min==1 and row_max==8 and col_max==8)
+      if self.pressed_buttons[i].filled then
+        -- TODO: run function to clear current button
+        print("DO SOMETHING")
+      end
+    end
     self.visual[v.row][v.col]=15
   end
 

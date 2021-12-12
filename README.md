@@ -15,18 +15,19 @@
 
 1. n
 2. k
-3, w
+3. w
 4. mod1
 5. mod2
-3. amp seqeunce
+6. amp seqeunce
 
 ## chord
  
-1. n
-2. k 
-3. amp seqeunce
-4. attack
-5. decay
-6. mod1
-7. mod2
+1. mod1
+2. mod2
+3. attack | decay
+5. chord1
+5. chord2
+5. chord3
+5. chord4
+
 8. selector

@@ -111,8 +111,8 @@ function Instrument:pulse(notes)
         note,
         mod1,
         mod2,
-        params:get("acid_chord_attack"),
-        params:get("acid_chord_decay"),
+        params:get("acid_chord_attack")*4*clock.get_beat_sec(),
+        params:get("acid_chord_decay")*4*clock.get_beat_sec(),
         params:get("acid_"..ins.."_delay"),
       params:get("acid_"..ins.."_reverb"))
     end

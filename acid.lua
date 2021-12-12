@@ -20,6 +20,8 @@ engine.name="Acid"
 local shift=false
 local inited=false
 
+local CHORDS={"I","ii","iii","IV","V","vi","vii","i"}
+
 function init()
   params_init()
 
@@ -38,7 +40,7 @@ end
 function init2()
   inited=true
 
-  song={root=36,scale="Major",notes={},chord_progression=s{"vi","ii","IV","I"},measure_length=64,chord_current=""}
+  song={root=36,scale="Major",notes={},chord_progression=s{"I","I","I","I"},measure_length=64,chord_current=""}
   song.measure_note=song.measure_length
 
   sequencer=lattice:new{
@@ -138,6 +140,7 @@ function params_init()
   local control0_15=controlspec.new(0,15,'lin',1,0,'',1/16,true)
   local control0_100p=controlspec.new(0,100,'lin',1,50,'%',1/101,true)
   local control0_255=controlspec.new(0,255,'lin',1,32,'',1/256,true)
+  local controlmeasure=controlspec.new(0.01,4,'lin',0.01,0.5,'measure',0.01/4)
   local control_small_time=controlspec.new(0,1,'lin',0.01,0.1,'s',0.01/1)
   local percussion={"kick","snare","clap","hat"}
   local percussion_defaults={
@@ -193,8 +196,14 @@ function params_init()
 
     -- add attack/decay parameters for chords
     if ins=="chord" then
-      params:add_control("acid_chord_attack","attack",control_small_time)
-      params:add_control("acid_chord_decay","decay",control_small_time)
+      params:add_control("acid_chord_attack","attack",controlmeasure)
+      params:add_control("acid_chord_decay","decay",controlmeasure)
+      for i=1,4 do
+        params:add_option("acid_chord_"..i,"chord "..i,CHORDS)
+        params:set_action("acid_chord_"..i,function(v)
+          song.chord_progression[i]=CHORDS[v]
+        end)
+      end
     end
 
     if ins=="lead" or ins=="bass" then
