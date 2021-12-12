@@ -1,17 +1,6 @@
 -- local pattern_time = require("pattern")
 local Grid_={}
 
-local INSTRUMENTS={
-  "chord",
-  "lead",
-  "bass",
-  "kick",
-  "snare",
-  "clap",
-  "hat",
-  "reverb",
-}
-
 function Grid_:new(args)
   local m=setmetatable({},{__index=Grid_})
   local args=args==nil and {} or args
@@ -65,7 +54,7 @@ end
 function Grid_:init()
   -- define functions for pressing keys
   self.press_fn={}
-  self.press_fn[PAGE_MIXER]=function(row,col)
+  self.press_fn[0]=function(row,col)
     for i,ins in ipairs(INSTRUMENTS) do
       if row==i then
         local name="acid_"..ins.."_amp_scale"
@@ -187,8 +176,7 @@ function Grid_:get_visual()
     end
   elseif self.page==1 then
     -- CHORDS
-    local names={"mod1","mod2","","1","2","3","4"}
-    for row,name in ipairs(names) do
+    for row,name in ipairs(CHORD_ATTR) do
       name="acid_"..ins.."_"..name
       if row<=2 then
         local b=param_to_binary(name,8)
@@ -207,8 +195,7 @@ function Grid_:get_visual()
       end
     end
   elseif self.page<=3 then
-    local names={"n","k","mod1","mod2","note","duration","amp"}
-    for row,name in ipairs(names) do
+    for row,name in ipairs(ACID_ATTR) do
       name="acid_"..ins.."_"..name
       if row<=4 then
         local b=param_to_binary(name,8)
@@ -222,8 +209,7 @@ function Grid_:get_visual()
       end
     end
   elseif self.page>=4 then
-    local names={"n","k","w","mod1","mod2","amp"}
-    for row,name in ipairs(names) do
+    for row,name in ipairs(DRUMS_ATTR) do
       name="acid_"..ins.."_"..name
       if row<=4 then
         local b=param_to_binary(name,8)

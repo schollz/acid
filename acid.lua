@@ -9,6 +9,20 @@
 --
 -- ?
 
+INSTRUMENTS={
+  "chord",
+  "lead",
+  "bass",
+  "kick",
+  "snare",
+  "clap",
+  "hat",
+  "reverb",
+}
+CHORD_ATTR={"mod1","mod2","attack","1","2","3","4"}
+ACID_ATTR={"n","k","mod1","mod2","note","duration","amp"}
+DRUMS_ATTR={"n","k","w","mod1","mod2","amp"}
+
 include("acid/lib/utils")
 s=require("sequins")
 er=require("er")
@@ -26,7 +40,7 @@ function init()
   params_init()
 
   -- initialize grid
-  -- grid_=grid__:new({})
+  grid_=grid__:new({})
 
   -- constant timer
   timer=metro.init()
@@ -86,7 +100,7 @@ function params_randomize_all()
     params:set("acid_"..ins.."_reverb",5)
   end
   for _,ins in ipairs({"kick","snare","hat","clap","reverb"}) do
-    params:set("acid_"..ins.."_n",math.random(6,8))
+    params:set("acid_"..ins.."_n",32)
     params:set("acid_"..ins.."_k",math.random(15,40))
   end
   for _,ins in ipairs({"bass","lead"}) do
@@ -166,7 +180,7 @@ function params_init()
       i_[ins]:set_wp(wp/100)
     end)
   end
-  local shared_parms=function(ins)
+  local shared_parms=function(ins,justmix)
     params:add_separator(ins)
     -- mixer volume
     params:add_control("acid_"..ins.."_amp_scale","amp scale",control0_100p)
@@ -175,6 +189,10 @@ function params_init()
     end)
 
     knw(ins)
+
+    if justmix==true then
+      do return end
+    end
     -- amp sequence
     params:add_group("amps",8)
     for i=1,8 do
@@ -250,7 +268,7 @@ function params_init()
 
   -- effects
   i_["reverb"]=instrument_:new({id="reverb"})
-  knw("reverb")
+  shared_parms("reverb",true)
   params:add_control("acid_reverb_attack","reverb attack",control_small_time)
   params:add_control("acid_reverb_decay","reverb decay",control_small_time)
 end
@@ -295,8 +313,51 @@ end
 
 function redraw()
   screen.clear()
-  screen.move(10,10)
-  screen.text("acid")
+  screen.level(15)
+  local text={}
+  local ins=""
+  if grid_.page>0 then
+    ins=INSTRUMENTS[grid_.page]
+  end
+  -- mirror the grid
+  if grid_.page==0 then
+    -- show mixer
+    for _,ins in ipairs(INSTRUMENTS) do
+      table.insert(text,ins..": "..params:get("acid_"..ins.."_amp_scale").."%")
+    end
+  elseif grid_.page==1 then
+    for _,name in ipairs(CHORD_ATTR) do
+      table.insert(text,ins.." "..name..": "..params:get("acid_"..ins.."_"..name))
+    end
+  elseif grid_.page<=3 then
+    for i,name in ipairs(ACID_ATTR) do
+      if i<=4 then
+        table.insert(text,ins.." "..name..": "..params:get("acid_"..ins.."_"..name))
+      else
+        table.insert(text,ins.." "..name)
+      end
+    end
+  elseif grid_.page<=3 then
+    for i,name in ipairs(ACID_ATTR) do
+      if i<=4 then
+        table.insert(text,ins.." "..name..": "..params:get("acid_"..ins.."_"..name))
+      else
+        table.insert(text,ins.." "..name)
+      end
+    end
+  elseif grid_.page<=8 then
+    for i,name in ipairs(DRUMS_ATTR) do
+      if i<=5 then
+        table.insert(text,ins.." "..name..": "..params:get("acid_"..ins.."_"..name)..(i>1 and "%" or ""))
+      else
+        table.insert(text,ins.." "..name)
+      end
+    end
+  end
+  for i,t in ipairs(text) do
+    screen.move(5,8*i-2)
+    screen.text(t)
+  end
   screen.update()
 end
 
